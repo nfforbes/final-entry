@@ -1,0 +1,64 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-space-grotesk: 'Space Grotesk', 'Helvetica Neue', sans-serif;
+  --color-obsidian: #0b0b0f;
+  --color-citrus: #c6f135;
+  --color-chalk: #f6f3ec;
+  --color-navy: #1a1a2e;
+  --color-danger: #e63946;
+  --color-border: #2d2d3a;
+  --color-surface-dark: #141418;
+  --color-surface-mid: #1e1e26;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-space-grotesk);
+  background-color: var(--color-obsidian);
+  color: var(--color-chalk);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection highlight */
+::selection {
+  background-color: var(--color-citrus);
+  color: var(--color-obsidian);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-citrus);
+}
+
+/* Utility: visually hidden (for screen reader text) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
