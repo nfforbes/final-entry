@@ -5,6 +5,7 @@ import { Providers } from './providers';
 import ThemeRegistry from '@/components/ThemeRegistry/ThemeRegistry';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { WhatsAppFab } from '@/components/layout/WhatsAppFab';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -54,6 +55,7 @@ export default function RootLayout({
           <Providers>
             <Navbar />
             {children}
+            <WhatsAppFab />
             <Footer />
           </Providers>
         </ThemeRegistry>
