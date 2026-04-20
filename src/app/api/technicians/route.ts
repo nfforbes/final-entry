@@ -5,7 +5,7 @@ import { Technician } from '@/models/Technician';
 export async function GET() {
   try {
     await connectDB();
-    const technicians = await Technician.find({}).sort({ name: 1 });
+    const technicians = await Technician.find({ role: 'technician' }).sort({ name: 1 });
     return NextResponse.json({ technicians });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch technicians' }, { status: 500 });

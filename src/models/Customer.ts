@@ -41,6 +41,7 @@ export interface ICustomer extends Document {
     bio?: string;
     photo?: string;
   };
+  activeJobs: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,7 +68,8 @@ const CustomerSchema = new Schema<ICustomer>(
       yearsExperience: { type: Number, default: 0 },
       bio: { type: String },
       photo: { type: String }
-    }
+    },
+    activeJobs: [{ type: Schema.Types.ObjectId, ref: 'Job' }]
   },
   { timestamps: true }
 );
