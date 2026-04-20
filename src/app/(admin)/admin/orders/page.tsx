@@ -361,7 +361,7 @@ export default function AdminOrdersPage() {
               fullWidth
               label="Schedule Date"
               type="date"
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               value={tempValue}
               onChange={(e) => setTempValue(e.target.value)}
               sx={{ input: { color: tokens.chalk }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: tokens.border } }}

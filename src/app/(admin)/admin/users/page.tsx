@@ -224,13 +224,15 @@ export default function AdminUsersPage() {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleActionClose}
-        PaperProps={{
-          sx: { 
-            bgcolor: tokens.surface, 
-            color: tokens.chalk,
-            border: `1px solid ${tokens.border}`,
-            minWidth: 180,
-            backgroundImage: 'none'
+        slotProps={{
+          paper: {
+            sx: { 
+              bgcolor: tokens.surface, 
+              color: tokens.chalk,
+              border: `1px solid ${tokens.border}`,
+              minWidth: 180,
+              backgroundImage: 'none'
+            }
           }
         }}
       >
