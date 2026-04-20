@@ -26,7 +26,7 @@ export interface ICustomer extends Document {
   phone?: string;
   address?: string;
   parish?: JamaicanParish;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'admin' | 'technician';
   quoteHistory: mongoose.Types.ObjectId[];
   preferredTheme: 'dark' | 'light';
   currentLocation?: {

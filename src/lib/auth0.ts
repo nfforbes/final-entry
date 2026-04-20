@@ -58,9 +58,10 @@ export const auth0 = new Auth0Client({
           
           const syncData = await syncResponse.json();
           if (syncResponse.ok) {
-            console.log(`[Auth0] Sync request successful: Role=${syncData.user?.role}`);
+            console.log(`[Auth0] Sync request successful. User: ${syncData.user?.email}, Role: ${syncData.user?.role}`);
           } else {
             console.error(`[Auth0] Sync request failed: Status=${syncResponse.status}, Error=${syncData.error}`);
+            console.log(`[Auth0] Full sync error response:`, JSON.stringify(syncData));
           }
 
           // Inject role into session for middleware checks

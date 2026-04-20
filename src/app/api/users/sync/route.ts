@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       status: 'pending' 
     });
 
-    const targetRole = invitation ? invitation.role : (existingUser ? existingUser.role : 'customer');
+    const targetRole = (invitation ? invitation.role : (existingUser ? existingUser.role : 'customer')).toLowerCase();
 
     let updatedUser;
     if (existingUser) {
