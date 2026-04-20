@@ -215,6 +215,8 @@ export default function AdminUsersPage() {
           pageSizeOptions={[10, 25, 50]}
           disableRowSelectionOnClick
           autoHeight
+          rowHeight={80}
+          columnHeaderHeight={60}
           loading={loading}
         />
       </Paper>

@@ -8,7 +8,7 @@ import { AdminClientLayout } from '@/components/admin/AdminClientLayout';
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // 1. Get session from Auth0
   const session = await auth0.getSession();
-
+  
   // 2. If no session, redirect to login
   if (!session || !session.user) {
     redirect('/auth/login');

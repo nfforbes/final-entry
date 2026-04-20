@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Box, Typography, Paper, Card, CardContent } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, Paper, Card, CardContent, Skeleton } from '@mui/material';
 import { TrendingUp, ShoppingCart, People, Assessment } from '@mui/icons-material';
+import axios from 'axios';
 
 const tokens = {
   obsidian: '#0b0b0f',
@@ -13,14 +14,38 @@ const tokens = {
   surfaceMid: '#1e1e26',
 };
 
-const STATS = [
-  { label: 'Total Orders', value: '124', icon: <ShoppingCart sx={{ color: tokens.citrus }} />, trend: '+12% from last month' },
-  { label: 'Active Users', value: '482', icon: <People sx={{ color: tokens.citrus }} />, trend: '+5% total growth' },
-  { label: 'Revenue', value: '$12,450', icon: <TrendingUp sx={{ color: tokens.citrus }} />, trend: '+8.2% vs target' },
-  { label: 'Pending Quotes', value: '18', icon: <Assessment sx={{ color: tokens.citrus }} />, trend: 'Needs attention' },
-];
+const iconMap: Record<string, React.ReactNode> = {
+  orders: <ShoppingCart sx={{ color: tokens.citrus }} />,
+  users: <People sx={{ color: tokens.citrus }} />,
+  revenue: <TrendingUp sx={{ color: tokens.citrus }} />,
+  quotes: <Assessment sx={{ color: tokens.citrus }} />,
+};
+
+interface DashboardStat {
+  label: string;
+  value: string;
+  trend: string;
+  type: string;
+}
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get('/api/admin/dashboard/stats');
+        setStats(res.data.stats || []);
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <Box>
       <Box sx={{ mb: 6 }}>
@@ -32,7 +57,7 @@ export default function AdminDashboard() {
         </Typography>
       </Box>
 
-      {/* Stats Grid using Box for stability */}
+      {/* Stats Grid */}
       <Box
         sx={{
           display: 'grid',
@@ -44,29 +69,41 @@ export default function AdminDashboard() {
           gap: 3,
         }}
       >
-        {STATS.map((stat) => (
-          <Card key={stat.label} sx={{ bgcolor: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: '16px' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Box sx={{ p: 1, bgcolor: 'rgba(198, 241, 53, 0.1)', borderRadius: '8px', display: 'flex' }}>
-                  {stat.icon}
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} sx={{ bgcolor: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: '16px' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Skeleton variant="circular" width={40} height={40} sx={{ mb: 2, bgcolor: 'rgba(246, 243, 236, 0.05)' }} />
+                <Skeleton variant="text" width="60%" sx={{ mb: 1, bgcolor: 'rgba(246, 243, 236, 0.05)' }} />
+                <Skeleton variant="text" width="40%" sx={{ bgcolor: 'rgba(246, 243, 236, 0.05)' }} />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          stats.map((stat) => (
+            <Card key={stat.label} sx={{ bgcolor: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: '16px' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box sx={{ p: 1, bgcolor: 'rgba(198, 241, 53, 0.1)', borderRadius: '8px', display: 'flex' }}>
+                    {iconMap[stat.type] || <Assessment sx={{ color: tokens.citrus }} />}
+                  </Box>
                 </Box>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-                {stat.value}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(246, 243, 236, 0.5)', mb: 1, fontWeight: 500 }}>
-                {stat.label}
-              </Typography>
-              <Typography variant="caption" sx={{ color: tokens.citrus, fontWeight: 600 }}>
-                {stat.trend}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
+                <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  {stat.value}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(246, 243, 236, 0.5)', mb: 1, fontWeight: 500 }}>
+                  {stat.label}
+                </Typography>
+                <Typography variant="caption" sx={{ color: tokens.citrus, fontWeight: 600 }}>
+                  {stat.trend}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </Box>
 
-      {/* Activity Sections using Box for stability */}
+      {/* Activity Sections */}
       <Box
         sx={{
           display: 'grid',
@@ -75,14 +112,16 @@ export default function AdminDashboard() {
           mt: 3,
         }}
       >
-        <Paper sx={{ p: 4, bgcolor: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: '16px', minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Paper sx={{ p: 4, bgcolor: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: '16px', minHeight: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography variant="h6" sx={{ color: tokens.chalk, mb: 2, opacity: 0.5 }}>Service Distribution</Typography>
           <Typography sx={{ color: 'rgba(246, 243, 236, 0.3)' }}>
-            Activity Visualization Placeholder
+            Visualization will load when volume increases
           </Typography>
         </Paper>
-        <Paper sx={{ p: 4, bgcolor: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: '16px', minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Paper sx={{ p: 4, bgcolor: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: '16px', minHeight: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography variant="h6" sx={{ color: tokens.chalk, mb: 2, opacity: 0.5 }}>Recent Activity</Typography>
           <Typography sx={{ color: 'rgba(246, 243, 236, 0.3)' }}>
-            Recent Logs Placeholder
+            Logs will appear as data matures
           </Typography>
         </Paper>
       </Box>
