@@ -12,12 +12,14 @@ export async function getGoogleConfig(): Promise<GoogleConfig | null> {
   await connectDB();
   const setting = await Setting.findOne({ key: 'google_config' });
   if (!setting) {
-    // Fallback to env for safety during migration
+    const baseUrl = process.env.APP_BASE_URL || 
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+                    
     if (process.env.GOOGLE_CLIENT_ID) {
       return {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-        redirectUri: process.env.GOOGLE_REDIRECT_URI || 'https://localhost:3000/api/admin/google/callback',
+        redirectUri: process.env.GOOGLE_REDIRECT_URI || `${baseUrl}/api/admin/google/callback`,
       };
     }
     return null;
