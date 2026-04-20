@@ -34,6 +34,7 @@ export interface IJob extends Document {
   technicianNotes?: string;
   signedOffAt?: Date;
   signedOffBy?: string;
+  signatureImage?: string;
   billedAt?: Date;
   closedAt?: Date;
   trackingToken?: string;

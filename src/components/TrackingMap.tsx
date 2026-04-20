@@ -6,8 +6,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in Leaflet + Next.js - executed only on client
-let DefaultIcon: L.Icon | null = null;
-let TechnicianIcon: L.Icon | null = null;
+let DefaultIcon: L.Icon | undefined = undefined;
+let TechnicianIcon: L.Icon | undefined = undefined;
 
 if (typeof window !== 'undefined') {
   DefaultIcon = L.icon({

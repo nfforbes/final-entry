@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { saveMicrosoftTokens, MicrosoftTokenData, getMsalClient, getMicrosoftConfig } from '@/lib/microsoft';
 import { auth0 } from '@/lib/auth0';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
   const error = url.searchParams.get('error');
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     if (response) {
       const tokens: MicrosoftTokenData = {
         accessToken: response.accessToken,
-        refreshToken: response.refreshToken || '',
+        refreshToken: (response as any).refreshToken || '',
         expiresOn: response.expiresOn || new Date(Date.now() + 3600 * 1000),
         account: {
           homeAccountId: response.account?.homeAccountId || '',

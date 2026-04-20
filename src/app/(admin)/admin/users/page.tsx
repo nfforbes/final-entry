@@ -247,15 +247,17 @@ export default function AdminUsersPage() {
       <Dialog 
         open={inviteOpen} 
         onClose={() => !inviteLoading && setInviteOpen(false)}
-        PaperProps={{
-          sx: { 
-            bgcolor: tokens.surface, 
-            color: tokens.chalk,
-            border: `1px solid ${tokens.border}`,
-            backgroundImage: 'none',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: 450
+        slotProps={{
+          paper: {
+            sx: { 
+              bgcolor: tokens.surface, 
+              color: tokens.chalk,
+              border: `1px solid ${tokens.border}`,
+              backgroundImage: 'none',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: 450
+            }
           }
         }}
       >

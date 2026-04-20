@@ -295,7 +295,7 @@ export default async function TreatmentPage({ params }: Props) {
                       </ListItemIcon>
                       <ListItemText 
                         primary={item} 
-                        primaryTypographyProps={{ sx: { color: 'rgba(246,243,236,0.7)', fontSize: '0.9rem' } }} 
+                        slotProps={{ primary: { sx: { color: 'rgba(246,243,236,0.7)', fontSize: '0.9rem' } } }} 
                       />
                     </ListItem>
                   ))}

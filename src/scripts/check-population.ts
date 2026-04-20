@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { Job } from './src/models/Job';
-import { connectDB } from './src/lib/mongodb';
+import { Job } from '../models/Job';
+import { connectDB } from '../lib/mongodb';
 
 async function test() {
   try {

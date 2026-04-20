@@ -108,7 +108,7 @@ export async function getValidAccessToken(): Promise<string | null> {
     if (response) {
       const newTokens: MicrosoftTokenData = {
         accessToken: response.accessToken,
-        refreshToken: response.refreshToken || tokens.refreshToken,
+        refreshToken: (response as any).refreshToken || tokens.refreshToken,
         expiresOn: response.expiresOn || new Date(Date.now() + 3600 * 1000),
         account: {
           homeAccountId: response.account?.homeAccountId || tokens.account.homeAccountId,

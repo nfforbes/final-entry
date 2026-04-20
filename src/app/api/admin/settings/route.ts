@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getMicrosoftTokens, getMicrosoftConfig } from '@/lib/microsoft';
 import { getGoogleTokens, getGoogleConfig } from '@/lib/google';
 import { auth0 } from '@/lib/auth0';
 import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
     const session = await auth0.getSession(req);
     console.log(`DEBUG: Admin Settings API session for: ${session?.user?.email}, Role: ${session?.user?.role}`);
     

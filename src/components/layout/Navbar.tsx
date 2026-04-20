@@ -199,10 +199,10 @@ export function Navbar() {
                 anchorEl={servicesAnchorEl}
                 open={Boolean(servicesAnchorEl)}
                 onClose={handleServicesClose}
-                MenuListProps={{
-                  'aria-labelledby': 'services-button',
-                }}
                 slotProps={{
+                  list: {
+                    'aria-labelledby': 'services-button',
+                  },
                   paper: {
                     sx: {
                       mt: 1.5,

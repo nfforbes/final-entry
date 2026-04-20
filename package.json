@@ -35,9 +35,11 @@
   },
   "devDependencies": {
     "@microsoft/microsoft-graph-types": "^2.43.1",
+    "@types/dotenv": "^6.1.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "typescript": "^5"

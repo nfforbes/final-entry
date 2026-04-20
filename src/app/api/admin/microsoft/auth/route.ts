@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getMsalClient, getMicrosoftConfig } from '@/lib/microsoft';
 import { auth0 } from '@/lib/auth0';
 import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   // 1. Check if user is logged in and is an Admin
   const session = await auth0.getSession(req);
   
