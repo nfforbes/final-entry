@@ -5,7 +5,7 @@ import { tokens } from '@/lib/theme';
 import Link from 'next/link';
 
 const SERVICES_LINKS = [
-  { label: 'Cockroach Control', href: '/services/cockroach-control' },
+  { label: 'Fumigation', href: '/services/fumigation' },
   { label: 'Termite Control', href: '/services/termite-control' },
   { label: 'Rodent Removal', href: '/services/rodent-removal' },
   { label: 'Mosquito Control', href: '/services/mosquito-control' },
@@ -36,7 +36,14 @@ const linkSx = {
   transition: 'color 0.2s',
 };
 
+import { usePathname } from 'next/navigation';
+
 export function Footer() {
+  const pathname = usePathname();
+
+  // Hide Footer in Admin Portal
+  if (pathname.startsWith('/admin')) return null;
+
   return (
     <Box
       component="footer"
@@ -103,7 +110,7 @@ export function Footer() {
                 mb: 3,
               }}
             >
-              Jamaica&apos;s premier pest elimination authority. Serving all 14 parishes
+              Jamaica&apos;s premier fumigation authority. Serving all 14 parishes
               with licensed, insured, guaranteed professionals.
             </Typography>
             <Stack spacing={0.5}>
@@ -160,7 +167,7 @@ export function Footer() {
             <Typography sx={columnHeadingSx}>Your Account</Typography>
             <Stack spacing={1}>
               {[
-                { label: 'Sign In / Register', href: '/api/auth/login' },
+                { label: 'Sign In / Register', href: '/auth/login' },
                 { label: 'My Portal', href: '/dashboard/customer' },
                 { label: 'Request a Quote', href: '/booking' },
               ].map((link) => (

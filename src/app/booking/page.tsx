@@ -8,7 +8,8 @@ import { RootState } from '@/store';
 import { nextStep, prevStep, updateFormData, resetQuote } from '@/store/slices/quoteSlice';
 
 const SERVICES = [
-  { slug: 'cockroach-control', label: 'Cockroach Control', emoji: '🪳' },
+  { slug: 'roach-control', label: 'Roach Control', emoji: '🪳' },
+  { slug: 'fumigation', label: 'Fumigation', emoji: '💨' },
   { slug: 'termite-control', label: 'Termite Control', emoji: '🪵' },
   { slug: 'rodent-removal', label: 'Rodent Removal', emoji: '🐀' },
   { slug: 'mosquito-control', label: 'Mosquito Control', emoji: '🦟' },

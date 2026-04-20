@@ -19,9 +19,9 @@ import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
 
 const SERVICES = [
   {
-    slug: 'cockroach-control',
-    title: 'Cockroach Control',
-    short: 'Complete elimination of German & American cockroach infestations.',
+    slug: 'fumigation',
+    title: 'Fumigation',
+    short: 'Precision high-level fumigation for complete area sterilization.',
     icon: <BugReportIcon sx={{ fontSize: 32 }} />,
     featured: true,
     gridArea: 'a',
@@ -48,7 +48,7 @@ const SERVICES = [
     title: 'Mosquito Control',
     short: 'Reduce dengue and Zika risk. Seasonal outdoor treatment programs.',
     icon: <LocalFloristIcon sx={{ fontSize: 32 }} />,
-    featured: true,
+    featured: false,
     gridArea: 'd',
     tag: 'High Priority JM',
   },
@@ -67,6 +67,14 @@ const SERVICES = [
     icon: <PestControlIcon sx={{ fontSize: 32 }} />,
     featured: false,
     gridArea: 'f',
+  },
+  {
+    slug: 'roach-control',
+    title: 'Roach Control',
+    short: 'Total elimination of German & American cockroach infestations.',
+    icon: <BugReportIcon sx={{ fontSize: 32 }} />,
+    featured: false,
+    gridArea: 'g',
   },
 ];
 
@@ -149,9 +157,9 @@ export function ServicesGrid() {
           gridTemplateRows: 'auto',
           gap: 2,
           gridTemplateAreas: {
-            xs: `"a" "b" "c" "d" "e" "f"`,
-            sm: `"a a" "b c" "d d" "e f"`,
-            md: `"a a b" "a a c" "d e f"`,
+            xs: `"a" "b" "c" "d" "e" "f" "g"`,
+            sm: `"a a" "b c" "d e" "f g"`,
+            md: `"a a b" "a a c" "d e f" "g g g"`,
           },
         }}
       >
@@ -177,9 +185,15 @@ export function ServicesGrid() {
                 textDecoration: 'none',
                 position: 'relative',
                 overflow: 'hidden',
-                background: service.featured
-                  ? `linear-gradient(135deg, ${tokens.surfaceMid} 0%, #1a1a2a 100%)`
+                background: service.featured || service.slug === 'roach-control'
+                  ? service.slug === 'fumigation'
+                    ? `linear-gradient(to top, rgba(11,11,15,0.9) 0%, rgba(11,11,15,0.2) 100%), url('/images/service-fumigation.png')`
+                    : service.slug === 'roach-control'
+                    ? `linear-gradient(to top, rgba(11,11,15,0.95) 0%, rgba(11,11,15,0) 100%), url('/images/service-roach.png')`
+                    : `linear-gradient(135deg, ${tokens.surfaceMid} 0%, #1a1a2a 100%)`
                   : tokens.surfaceMid,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
                 border: `1px solid ${tokens.border}`,
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',

@@ -7,7 +7,7 @@ import { Testimonials } from '@/components/home/Testimonials';
 
 export default function HomePage() {
   return (
-    <Box component="main" sx={{ pt: '72px' }}>
+    <Box component="main" sx={{ pt: 0 }}>
       <HeroSection />
       <ServicesGrid />
       <TrustBadges />

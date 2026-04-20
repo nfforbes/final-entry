@@ -24,5 +24,5 @@ export const DEFAULT_SETTINGS: Array<{ key: string; value: string }> = [
   { key: 'companyName', value: 'Final Entry' },
   { key: 'phone', value: '+1 (876) 000-0000' },
   { key: 'email', value: 'info@finalentry.com.jm' },
-  { key: 'heroTagline', value: "Jamaica's Pest Elimination Authority" },
+  { key: 'heroTagline', value: "Jamaica's Fumigation Authority" },
 ];

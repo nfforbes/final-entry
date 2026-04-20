@@ -11,6 +11,16 @@ export const metadata: Metadata = {
 
 const PESTS = [
   {
+    slug: 'duck-ants',
+    name: 'Duck Ants (Termites)',
+    scientific: 'Nasutitermes costalis',
+    danger: 'Severe',
+    emoji: '🪵',
+    description: 'The common Jamaican name for destructive termites. These insects build large, conspicuous arboreal nests and mud tunnels to access structural wood. They are the leading cause of structural damage in Jamaican homes.',
+    signs: ['Conspicuous brown mud nests in trees or on buildings', 'Hard mud-like "tracks" or tunnels on walls', 'Small, creamy-white insects found within wood', 'Hollow-sounding or sagging structural timber'],
+    treatment: 'termite-control',
+  },
+  {
     slug: 'german-cockroach',
     name: 'German Cockroach',
     scientific: 'Blattella germanica',
@@ -18,7 +28,7 @@ const PESTS = [
     emoji: '🪳',
     description: 'The most common cockroach in Jamaican homes and restaurants. Prolific breeders with one female producing up to 40,000 offspring per year. A key driver of asthma in urban areas.',
     signs: ['Droppings that look like black pepper', 'Musty odour in kitchen cabinets', 'Egg cases (oothecae) in crevices', 'Nocturnal sightings near food sources'],
-    treatment: 'cockroach-control',
+    treatment: 'roach-control',
   },
   {
     slug: 'subterranean-termite',
@@ -107,7 +117,7 @@ export default function PestLibraryPage() {
         }}
       >
         {PESTS.map((pest) => (
-          <Link key={pest.slug} href={`/services/${pest.treatment}`} passHref style={{ textDecoration: 'none', display: 'block' }}>
+          <Link key={pest.slug} href={`/treatments/${pest.slug}`} passHref style={{ textDecoration: 'none', display: 'block' }}>
             <Box
               sx={{
                 bgcolor: tokens.surfaceMid,

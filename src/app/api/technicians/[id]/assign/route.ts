@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Quote } from '@/models/Quote';
+import { Job } from '@/models/Job';
 import { Technician } from '@/models/Technician';
 
 export async function POST(
@@ -10,29 +10,29 @@ export async function POST(
   try {
     const { id } = await params;
     await connectDB();
-    const { quoteId } = await req.json();
+    const { jobId } = await req.json();
 
-    const [technician, quote] = await Promise.all([
+    const [technician, job] = await Promise.all([
       Technician.findById(id),
-      Quote.findById(quoteId),
+      Job.findById(jobId),
     ]);
 
-    if (!technician || !quote) {
+    if (!technician || !job) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    // Assign technician to quote
-    quote.technicianId = technician._id;
-    quote.status = 'contacted';
+    // Assign technician to job
+    job.technicianId = technician._id;
+    job.status = 'assigned';
 
-    // Add quote to technician's active list
-    if (!technician.activeQuotes.includes(quoteId)) {
-      technician.activeQuotes.push(quoteId);
+    // Add job to technician's active list
+    if (!technician.activeJobs.includes(jobId)) {
+      technician.activeJobs.push(jobId);
     }
 
-    await Promise.all([quote.save(), technician.save()]);
+    await Promise.all([job.save(), technician.save()]);
 
-    return NextResponse.json({ quote, technician });
+    return NextResponse.json({ job, technician });
   } catch {
     return NextResponse.json({ error: 'Assignment failed' }, { status: 500 });
   }

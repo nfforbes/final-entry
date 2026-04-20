@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   description:
     'Professional pest control services across all 14 parishes of Jamaica. Cockroaches, termites, rodents, mosquitoes — eliminated. Licensed, insured, guaranteed.',
-  keywords: ['pest control Jamaica', 'exterminator Jamaica', 'termite control', 'cockroach control', 'rodent removal Kingston'],
+  keywords: ['pest control Jamaica', 'exterminator Jamaica', 'termite control', 'fumigation', 'rodent removal Kingston'],
   openGraph: {
     type: 'website',
     locale: 'en_JM',
@@ -46,11 +46,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${cormorant.variable} ${spaceGrotesk.variable}`}
+      suppressHydrationWarning
     >
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body style={{ margin: 0 }}>
+      <body style={{ margin: 0 }} suppressHydrationWarning>
         <ThemeRegistry>
           <Providers>
             <Navbar />

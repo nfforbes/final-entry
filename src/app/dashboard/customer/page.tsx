@@ -30,7 +30,7 @@ export default function CustomerDashboard() {
           </Typography>
           <Button
             component="a"
-            href="/api/auth/login"
+            href="/auth/login"
             variant="contained"
             id="dashboard-login"
             sx={{ bgcolor: tokens.citrus, color: tokens.obsidian, fontWeight: 700, px: 5 }}

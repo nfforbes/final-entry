@@ -8,10 +8,10 @@ import Link from 'next/link';
 
 const SLIDES = [
   {
-    image: '/images/hero-technician.png',
+    image: '/images/hero-fumigation.png',
     headline: 'Final',
     accent: 'Entry.',
-    desc: 'Precision pest elimination across all 14 parishes. Termites, cockroaches, rodents — eradicated. Guaranteed.',
+    desc: 'Precision fumigation services across all 14 parishes. Termites, cockroaches, rodents — eradicated. Guaranteed.',
   },
   {
     image: '/images/hero-2.png',
@@ -61,11 +61,14 @@ export function HeroSection() {
       sx={{
         position: 'relative',
         minHeight: '100vh',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         overflow: 'hidden',
         background: tokens.obsidian,
+        m: 0,
+        p: 0,
       }}
     >
       {/* Background Slider */}
@@ -129,8 +132,9 @@ export function HeroSection() {
           zIndex: 3,
           maxWidth: '1200px',
           mx: 'auto',
-          px: { xs: 3, md: 6 },
-          py: { xs: 12, md: 0 },
+          px: 0,
+          pt: '100px',
+          pb: 0,
           width: '100%',
         }}
       >
@@ -144,7 +148,7 @@ export function HeroSection() {
           >
             {/* Eyebrow label */}
             <Chip
-              label="🇯🇲 Jamaica's #1 Pest Elimination Authority"
+              label="🇯🇲 Jamaica's #1 Fumigation Authority"
               sx={{
                 mb: 3,
                 bgcolor: 'rgba(198,241,53,0.12)',

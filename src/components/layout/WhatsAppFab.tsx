@@ -5,8 +5,15 @@ import { Fab, Tooltip, Zoom } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useScrollTrigger } from '@mui/material';
 
+import { usePathname } from 'next/navigation';
+
 export function WhatsAppFab() {
+  const pathname = usePathname();
   const whatsappUrl = 'https://wa.me/18760000000';
+  
+  // Hide FAB in Admin Portal
+  if (pathname.startsWith('/admin')) return null;
+
   
   // Show after scrolling a bit or just show always? User said "floating on each page".
   // Let's show it always but with a nice entry animation.

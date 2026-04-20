@@ -11,12 +11,12 @@ export const metadata: Metadata = {
 
 const SERVICES = [
   {
-    slug: 'cockroach-control',
-    title: 'Cockroach Control',
-    description: 'Complete elimination of German & American cockroach infestations using industry-leading gel baits, insect growth regulators, and residual treatments.',
+    slug: 'fumigation',
+    title: 'Fumigation',
+    description: 'Precision high-level area sterilization and sterilization protocols using modern fogging and aerosolized treatment technology.',
     tag: 'Most Requested',
-    emoji: '🪳',
-    features: ['Bait station placement', 'Residual spray perimeter', 'Entry point sealing', '30-day follow-up'],
+    emoji: '💨',
+    features: ['Sterile area isolation', 'Fogging technology', 'Aerosolized sterilization', 'Post-treatment verification'],
   },
   {
     slug: 'termite-control',
@@ -53,6 +53,13 @@ const SERVICES = [
     description: 'Year-round home protection plan covering 15+ pest types with quarterly scheduled visits and a zero-tolerance guarantee.',
     emoji: '🏠',
     features: ['15+ pest types covered', 'Quarterly scheduled visits', 'Emergency call-outs', '100% satisfaction guarantee'],
+  },
+  {
+    slug: 'roach-control',
+    title: 'Roach Control',
+    description: 'Targeted elimination of German & American cockroach infestations using industry-leading gel baits and residual treatments.',
+    emoji: '🪳',
+    features: ['Precision gel baiting', 'Species identification', 'Sanitation guidance', 'Guaranteed elimination'],
   },
 ];
 

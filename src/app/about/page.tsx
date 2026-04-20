@@ -50,7 +50,7 @@ export default function AboutPage() {
         <Typography variant="h1" sx={{ fontSize: { xs: '3rem', md: '5rem' }, mt: 1, mb: 4, lineHeight: 1, maxWidth: 700 }}>
           Jamaica&apos;s{' '}
           <Box component="span" sx={{ color: tokens.citrus }}>
-            Pest Elimination
+            Fumigation service
           </Box>{' '}
           Authority
         </Typography>
@@ -108,13 +108,13 @@ export default function AboutPage() {
         </Box>
       </Box>
 
-      {/* Mission */}
+      {/* Job Section */}
       <Box sx={{ bgcolor: tokens.surfaceDark, borderTop: `1px solid ${tokens.border}`, borderBottom: `1px solid ${tokens.border}` }}>
         <Box sx={{ maxWidth: '1200px', mx: 'auto', px: { xs: 3, md: 6 }, py: { xs: 8, md: 12 } }}>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 8, alignItems: 'center' }}>
             <Box>
               <Typography variant="overline" sx={{ color: tokens.citrus, fontWeight: 700, letterSpacing: '0.14em', display: 'block', mb: 2 }}>
-                Our Mission
+                Our Job
               </Typography>
               <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '3rem' }, mb: 3, lineHeight: 1.1 }}>
                 Healthier Homes. Safer Businesses.

@@ -14,39 +14,42 @@ const SERVICES: Record<string, {
   process: { step: string; title: string; desc: string }[];
   tag?: string;
   emoji: string;
+  image: string;
   faqs: { q: string; a: string }[];
 }> = {
-  'cockroach-control': {
-    title: 'Cockroach Control',
-    subtitle: 'Total elimination of German & American cockroach infestations.',
-    emoji: '🪳',
+  'fumigation': {
+    title: 'Fumigation',
+    subtitle: 'Precision high-level area sterilization and sterilization protocols.',
+    emoji: '💨',
     tag: 'Most Requested',
+    image: '/images/service-detail-fumigation.png',
     description:
-      'Cockroaches are Jamaica\'s most prevalent health hazard, contaminating food and spreading diseases like salmonella. Our IPM (Integrated Pest Management) protocol combines targeted gel baiting with residual treatment to achieve 100% elimination.',
+      'Professional area sterilization is essential for high-risk environments like commercial kitchens, storage facilities, and residential spaces. Our protocols use advanced aerosolized technology to ensure total sterilization of all surfaces and air volumes.',
     details: [
-      'Inspection & species identification by certified technician',
-      'Targeted gel bait application at harborage sites',
-      'Insect Growth Regulator (IGR) application',
-      'Perimeter residual spray treatment',
-      'Entry point sealing (cracks, gaps, pipes)',
-      '30-day follow-up visit included',
+      'Comprehensive biological risk assessment',
+      'Advanced ULV fogging and aerosolized treatment',
+      'Area isolation and sealing protocols',
+      'Post-treatment air quality verification',
+      'Detailed sterilization certificate provided',
+      'Safe re-entry protocols for all occupants',
     ],
     process: [
-      { step: '01', title: 'Inspection', desc: 'We assess harborage sites, identify species, and measure the severity of the infestation.' },
-      { step: '02', title: 'Treatment', desc: 'Gel baits placed at key sites, combined with residual treatment of all surfaces.' },
-      { step: '03', title: 'Exclusion', desc: 'Entry points sealed with professional-grade caulk and expanding foam.' },
-      { step: '04', title: 'Follow-up', desc: 'Return visit in 30 days to confirm elimination and re-bait if needed.' },
+      { step: '01', title: 'Assessment', desc: 'Identify high-touch surfaces and risk factors within the service area.' },
+      { step: '02', title: 'Preparation', desc: 'Isolate sensitive equipment and seal the ventilation system for treatment.' },
+      { step: '03', title: 'Sterilization', desc: 'Apply aerosolized treatment using high-precision fogging units.' },
+      { step: '04', title: 'Verification', desc: 'Monitor air quality and perform surface checks before clearing the area for re-entry.' },
     ],
     faqs: [
-      { q: 'How long does treatment take?', a: 'A standard residential treatment takes 1–2 hours depending on the size of the property.' },
-      { q: 'Is it safe for children and pets?', a: 'Yes. Our gel baits are formulated to attract cockroaches specifically. We advise keeping pets away from treated surfaces for 2 hours.' },
-      { q: 'Do I need to leave the property?', a: 'Generally no, unless a spray treatment is required, in which case we\'ll ask you to vacate for 2–4 hours.' },
+      { q: 'Is the treatment safe for electronics?', a: 'Yes. Our dry-fog technology is safe for sensitive electronic equipment when properly prepared.' },
+      { q: 'How long must the area remain isolated?', a: 'Isolation typically lasts 2–4 hours depending on the volume and ventilation capacity.' },
+      { q: 'Does it leave a residue?', a: 'Our hospital-grade sterilization agents decompose naturally without leaving toxic residues.' },
     ],
   },
   'termite-control': {
     title: 'Termite Control',
     subtitle: 'Targeted baiting systems that protect your structure long-term.',
     emoji: '🪵',
+    image: '/images/service-detail-termite.png',
     description:
       'Termites cause billions in structural damage annually. In Jamaica, both subterranean and drywood forms are prevalent. We deploy a combination of liquid termiticide barriers and above-ground bait stations for comprehensive, lasting protection.',
     details: [
@@ -73,6 +76,7 @@ const SERVICES: Record<string, {
     title: 'Rodent Removal',
     subtitle: 'Rats and mice eliminated. Entry points sealed. Done.',
     emoji: '🐀',
+    image: '/images/service-detail-rodent.png',
     description:
       'Rodents carry over 35 diseases and can cause devastating structural damage to wiring and plumbing. Our rodent exclusion program combines population control with permanent entry-point sealing to ensure they can\'t come back.',
     details: [
@@ -100,6 +104,7 @@ const SERVICES: Record<string, {
     subtitle: 'Reduce dengue and Zika risk with targeted outdoor treatment.',
     emoji: '🦟',
     tag: 'High Priority JM',
+    image: '/images/service-detail-mosquito.png',
     description:
       'Mosquito-borne illnesses like dengue, Zika, and chikungunya are serious health threats in Jamaica. Our control program combines source reduction, larviciding, and adulticide fogging to provide meaningful protection around your home or business.',
     details: [
@@ -126,6 +131,7 @@ const SERVICES: Record<string, {
     title: 'Bed Bug Treatment',
     subtitle: 'Heat and chemical treatments. We don\'t leave until they\'re gone.',
     emoji: '🛏️',
+    image: '/images/service-detail-bedbug.png',
     description:
       'Bed bugs are expert hitchhikers and one of the most difficult pests to eliminate. Our protocol uses a combination of heat treatment and targeted residual chemicals to destroy all life stages — eggs included — with a guaranteed re-treatment policy.',
     details: [
@@ -152,6 +158,7 @@ const SERVICES: Record<string, {
     title: 'General Pest Control',
     subtitle: 'Year-round home protection covering 15+ pest types.',
     emoji: '🏠',
+    image: '/images/service-detail-general.png',
     description:
       'Our flagship home protection plan is a proactive, year-round service that keeps your home sealed and pest-free. Quarterly scheduled visits ensure pests are intercepted before they can establish — covering over 15 common pest types.',
     details: [
@@ -172,6 +179,33 @@ const SERVICES: Record<string, {
       { q: 'What pests are covered?', a: 'Cockroaches, ants, spiders, centipedes, silverfish, earwigs, wasps, and more. Ask your technician for the full list.' },
       { q: 'What if I have a specific pest problem between visits?', a: 'Call us anytime. Emergency call-outs are included in the plan at no extra charge.' },
       { q: 'Can I cancel at any time?', a: 'Yes. Our plans are month-to-month with 30-day notice. No long-term contracts required.' },
+    ],
+  },
+  'roach-control': {
+    title: 'Roach Control',
+    subtitle: 'Total elimination of German & American cockroach infestations.',
+    emoji: '🪳',
+    image: '/images/service-detail-roach.png',
+    description:
+      'Cockroaches are a significant health hazard, contaminating food and spreading diseases. Our Integrated Pest Management (IPM) protocol combines targeted gel baiting with long-term residual treatment to achieve absolute elimination.',
+    details: [
+      'Site-specific species identification',
+      'High-precision gel bait application',
+      'Insect Growth Regulator (IGR) treatment',
+      'Entry point sealing and exclusion',
+      'Harborage site destruction',
+      '30-day performance follow-up',
+    ],
+    process: [
+      { step: '01', title: 'Inspection', desc: 'Identify harborage sites and measure infestation severity.' },
+      { step: '02', title: 'Baiting', desc: 'Apply professional-grade gel baits at points of high activity.' },
+      { step: '03', title: 'Exclusion', desc: 'Seal gaps and cracks to prevent future ingress.' },
+      { step: '04', title: 'Monitoring', desc: 'Confirm total elimination with a scheduled follow-up visit.' },
+    ],
+    faqs: [
+      { q: 'How long until I see results?', a: 'Most infestations show 90% reduction within the first 48 hours.' },
+      { q: 'Is it safe for pets?', a: 'Yes. Our baits are contained within cracks and crevices unreachable by pets.' },
+      { q: 'Do I need to empty my cabinets?', a: 'Typically no, unless the infestation is severe. We will advise during inspection.' },
     ],
   },
 };
@@ -212,63 +246,100 @@ export default async function ServiceDetailPage({ params }: Props) {
           <Link href="/services" passHref style={{ textDecoration: 'none', display: 'inline-block' }}>
             <Button
               startIcon={<ArrowBackIcon />}
-              sx={{ color: 'rgba(246,243,236,0.5)', mb: 4, pl: 0, '&:hover': { color: tokens.citrus } }}
+              sx={{ color: 'rgba(246,243,236,0.5)', mb: { xs: 4, md: 6 }, pl: 0, '&:hover': { color: tokens.citrus } }}
             >
               All Services
             </Button>
           </Link>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-            <Typography sx={{ fontSize: '3rem', lineHeight: 1 }}>{service.emoji}</Typography>
-            {service.tag && (
-              <Chip
-                label={service.tag}
-                sx={{
-                  bgcolor: 'rgba(198,241,53,0.12)',
-                  border: `1px solid ${tokens.citrus}`,
-                  color: tokens.citrus,
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                }}
-              />
-            )}
-          </Box>
-
-          <Typography
-            variant="h1"
-            sx={{ fontSize: { xs: '2.8rem', md: '4.5rem' }, lineHeight: 1.05, mb: 2 }}
-          >
-            {service.title}
-          </Typography>
-          <Typography
+          <Box
             sx={{
-              color: 'rgba(246,243,236,0.6)',
-              fontSize: '1.15rem',
-              maxWidth: 600,
-              lineHeight: 1.7,
-              mb: 5,
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1.2fr 1fr' },
+              gap: { xs: 6, md: 10 },
+              alignItems: 'center',
             }}
           >
-            {service.description}
-          </Typography>
+            {/* Column 1: Text */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Typography sx={{ fontSize: '3rem', lineHeight: 1 }}>{service.emoji}</Typography>
+                {service.tag && (
+                  <Chip
+                    label={service.tag}
+                    sx={{
+                      bgcolor: 'rgba(198,241,53,0.12)',
+                      border: `1px solid ${tokens.citrus}`,
+                      color: tokens.citrus,
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                    }}
+                  />
+                )}
+              </Box>
 
-          <Link href="/booking" passHref style={{ textDecoration: 'none', display: 'inline-block' }}>
-            <Button
-              variant="contained"
-              size="large"
-              id={`${slug}-cta-hero`}
+              <Typography
+                variant="h1"
+                sx={{ fontSize: { xs: '2.8rem', md: '4.5rem' }, lineHeight: 1.05, mb: 3 }}
+              >
+                {service.title}
+              </Typography>
+              <Typography
+                sx={{
+                  color: 'rgba(246,243,236,0.6)',
+                  fontSize: '1.15rem',
+                  maxWidth: 540,
+                  lineHeight: 1.7,
+                  mb: 5,
+                }}
+              >
+                {service.description}
+              </Typography>
+
+              <Link href="/booking" passHref style={{ textDecoration: 'none', display: 'inline-block' }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  id={`${slug}-cta-hero`}
+                  sx={{
+                    bgcolor: tokens.citrus,
+                    color: tokens.obsidian,
+                    fontWeight: 700,
+                    px: 4,
+                    py: 1.8,
+                    fontSize: '0.9rem',
+                    borderRadius: '4px',
+                  }}
+                >
+                  Request a Free Quote
+                </Button>
+              </Link>
+            </Box>
+
+            {/* Column 2: Image */}
+            <Box
               sx={{
-                bgcolor: tokens.citrus,
-                color: tokens.obsidian,
-                fontWeight: 700,
-                px: 4,
-                py: 1.5,
-                fontSize: '0.85rem',
+                position: 'relative',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: `1px solid ${tokens.border}`,
+                boxShadow: '0 20px 80px rgba(0,0,0,0.5)',
+                aspectRatio: '16/10',
               }}
             >
-              Request a Free Quote
-            </Button>
-          </Link>
+              <Box
+                component="img"
+                src={service.image}
+                alt={service.title}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            </Box>
+          </Box>
         </Box>
       </Box>
 
