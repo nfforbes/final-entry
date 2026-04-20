@@ -23,7 +23,9 @@ export const auth0 = new Auth0Client({
   // AUTH0_SECRET must be a unique 32-byte encryption key, NOT the client secret
   secret: process.env.AUTH0_SECRET,
   onCallback: async (error, ctx, session) => {
-    const currentBaseUrl = ctx.appBaseUrl || appBaseUrl;
+    // In production, prefer the known appBaseUrl over headers to avoid edge-case localhost redirects
+    const currentBaseUrl = process.env.NODE_ENV === 'production' ? appBaseUrl : (ctx.appBaseUrl || appBaseUrl);
+    console.log(`[Auth0] onCallback: currentBaseUrl detected as ${currentBaseUrl}`);
 
     if (error) {
       console.error('[Auth0] Callback error:', error);

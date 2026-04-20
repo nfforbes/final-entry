@@ -69,8 +69,19 @@ export async function POST(request: Request) {
       console.log(`[Sync Route] Applied invitation role '${targetRole}' to ${user.email}`);
     }
 
-    console.log(`[Sync Route] Successfully synced user: ${updatedUser.email} with role: ${updatedUser.role}`);
-    return NextResponse.json({ success: true, user: updatedUser });
+    const userToReturn = updatedUser.toObject ? updatedUser.toObject() : updatedUser;
+    console.log(`[Sync Route] Successfully synced user: ${userToReturn.email} with role: ${userToReturn.role}`);
+    
+    return NextResponse.json({ 
+      success: true, 
+      user: {
+        _id: userToReturn._id,
+        email: userToReturn.email,
+        role: userToReturn.role,
+        auth0Id: userToReturn.auth0Id,
+        name: userToReturn.name
+      } 
+    });
   } catch (error) {
     console.error('[Sync Route] Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
