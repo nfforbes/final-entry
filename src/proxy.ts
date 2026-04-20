@@ -25,7 +25,7 @@ export async function proxy(request: NextRequest) {
     
     if (response) {
       // Only short-circuit if it's a redirect (auth flow) or an auth-specific endpoint
-      if (response.status >= 300 && response.status < 400 || url.pathname.includes('/api/auth')) {
+      if (response.status >= 300 && response.status < 400 || url.pathname.includes('/auth/')) {
         console.log(`[Proxy] Auth0 handled route (Short-circuit): ${url.pathname} -> Status: ${response.status}`);
         return response;
       }
