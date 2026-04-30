@@ -67,39 +67,17 @@ export function Footer() {
         >
           {/* Brand column */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Box
+                component="img"
+                src="/logo.png"
+                alt="Final Entry Logo"
                 sx={{
-                  width: 32,
-                  height: 32,
-                  bgcolor: tokens.citrus,
-                  borderRadius: 0.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  height: 48,
+                  width: 'auto',
+                  objectFit: 'contain',
                 }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: 'var(--font-cormorant)',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    color: tokens.obsidian,
-                  }}
-                >
-                  FE
-                </Typography>
-              </Box>
-              <Typography
-                sx={{
-                  fontFamily: 'var(--font-cormorant)',
-                  fontWeight: 700,
-                  fontSize: '1.3rem',
-                  color: tokens.chalk,
-                }}
-              >
-                Final Entry
-              </Typography>
+              />
             </Box>
             <Typography
               sx={{
@@ -115,7 +93,7 @@ export function Footer() {
             </Typography>
             <Stack spacing={0.5}>
               <Typography sx={{ color: tokens.citrus, fontWeight: 600, fontSize: '0.88rem' }}>
-                📞 +1 (876) 000-0000
+                📞 +1 (876) 277-4040
               </Typography>
               <Typography sx={{ color: 'rgba(246,243,236,0.5)', fontSize: '0.85rem' }}>
                 info@finalentry.com.jm

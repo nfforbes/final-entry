@@ -12,7 +12,7 @@ const PARISHES = [
 ];
 
 const CONTACT_INFO = [
-  { emoji: '📞', label: 'Phone', value: '+1 (876) 000-0000', href: 'tel:+18760000000' },
+  { emoji: '📞', label: 'Phone', value: '+1 (876) 277-4040', href: 'tel:+18762774040' },
   { emoji: '✉️', label: 'Email', value: 'info@finalentry.com.jm', href: 'mailto:info@finalentry.com.jm' },
   { emoji: '📍', label: 'Office', value: '1 Harbour Street, Kingston, Jamaica', href: null },
   { emoji: '🕐', label: 'Hours', value: 'Mon–Sat: 7am – 6pm', href: null },
@@ -112,10 +112,10 @@ export default function ContactPage() {
             </Typography>
             <Typography
               component="a"
-              href="tel:+18760000000"
+              href="tel:+18762774040"
               sx={{ color: tokens.citrus, fontWeight: 700, fontSize: '1.1rem', textDecoration: 'none' }}
             >
-              📞 +1 (876) 000-0000
+              📞 +1 (876) 277-4040
             </Typography>
           </Box>
         </Box>

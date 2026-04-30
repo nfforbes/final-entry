@@ -121,48 +121,22 @@ export function Navbar() {
             component={Link}
             href="/"
             sx={{
-              textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
-              gap: 1.5,
               flex: 1,
               pl: { xs: 1, md: 2 },
             }}
           >
             <Box
+              component="img"
+              src="/logo.png"
+              alt="Final Entry Logo"
               sx={{
-                width: 32,
-                height: 32,
-                bgcolor: tokens.obsidian,
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                height: { xs: 32, md: 40 },
+                width: 'auto',
+                objectFit: 'contain',
               }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: 'var(--font-cormorant)',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  color: tokens.citrus,
-                  lineHeight: 1,
-                }}
-              >
-                FE
-              </Typography>
-            </Box>
-            <Typography
-              sx={{
-                fontFamily: 'var(--font-cormorant)',
-                fontWeight: 700,
-                fontSize: { xs: '1.1rem', md: '1.4rem' },
-                color: tokens.obsidian,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Final Entry
-            </Typography>
+            />
           </Box>
 
           {/* Desktop nav */}

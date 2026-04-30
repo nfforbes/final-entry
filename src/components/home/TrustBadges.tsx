@@ -140,14 +140,14 @@ export function TrustBadges() {
               Request Free Quote
             </Button>
             <Button
-              href="tel:+18760000000"
+              href="tel:+18762774040"
               component="a"
               variant="outlined"
               size="large"
               id="trust-cta-call"
               sx={{ borderColor: tokens.border, color: tokens.chalk, whiteSpace: 'nowrap' }}
             >
-              📞 Call Now
+              📞 +1 (876) 277-4040
             </Button>
           </Stack>
         </Box>

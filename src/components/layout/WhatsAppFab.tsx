@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation';
 
 export function WhatsAppFab() {
   const pathname = usePathname();
-  const whatsappUrl = 'https://wa.me/18760000000';
+  const whatsappUrl = 'https://wa.me/18762774040';
   
   // Hide FAB in Admin Portal
   if (pathname.startsWith('/admin')) return null;
