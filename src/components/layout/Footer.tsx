@@ -93,13 +93,13 @@ export function Footer() {
             </Typography>
             <Stack spacing={0.5}>
               <Typography sx={{ color: tokens.citrus, fontWeight: 600, fontSize: '0.88rem' }}>
-                📞 +1 (876) 277-4040
+                📞 +1 (876) 887-7622
               </Typography>
               <Typography sx={{ color: 'rgba(246,243,236,0.5)', fontSize: '0.85rem' }}>
-                info@finalentry.com.jm
+                finalentrypest@gmail.com
               </Typography>
               <Typography sx={{ color: 'rgba(246,243,236,0.5)', fontSize: '0.85rem' }}>
-                Kingston, Jamaica 🇯🇲
+                7 Corrie Close, Upper St. Andrew, Jamaica 🇯🇲
               </Typography>
             </Stack>
           </Box>

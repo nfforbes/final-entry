@@ -22,7 +22,7 @@ export const DEFAULT_SETTINGS: Array<{ key: string; value: string }> = [
   { key: 'accentColor', value: '#C6F135' },
   { key: 'primaryColor', value: '#0B0B0F' },
   { key: 'companyName', value: 'Final Entry' },
-  { key: 'phone', value: '+1 (876) 277-4040' },
-  { key: 'email', value: 'info@finalentry.com.jm' },
+  { key: 'phone', value: '+1 (876) 887-7622' },
+  { key: 'email', value: 'finalentrypest@gmail.com' },
   { key: 'heroTagline', value: "Jamaica's Fumigation Authority" },
 ];
