@@ -52,7 +52,7 @@ export default function TechnicianLayout({ children }: { children: React.ReactNo
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Button 
-                href="/api/auth/logout" 
+                href="/auth/logout" 
                 startIcon={<LogoutIcon />}
                 sx={{ 
                   color: 'rgba(255,255,255,0.6)', 
