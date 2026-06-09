@@ -23,10 +23,11 @@
             </intent-filter>
         </activity>
 
-        <!-- AppAuth redirect URI handler – receives finalentry://callback from the browser -->
+        <!-- AppAuth redirect URI handler — must match AuthManager.REDIRECT_URI -->
         <activity
             android:name="net.openid.appauth.RedirectUriReceiverActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

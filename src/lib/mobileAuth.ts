@@ -1,5 +1,8 @@
-import { createRemoteJWKSet, jwtVerify, decodeJwt, type JWTPayload } from 'jose';
+import { createRemoteJWKSet, decodeJwt, jwtVerify, type JWTPayload } from 'jose';
 import { NextRequest } from 'next/server.js';
+
+/** Native Android client id — must match `AuthManager.kt` / Auth0 Native application. */
+export const AUTH0_MOBILE_CLIENT_ID_DEFAULT = 'VrzhxH5mE9gclkKHG5QOLhPivXFa1xNz';
 
 /** Normalizes Auth0 issuer URL (issuer claim format). */
 export function getAuth0Issuer(): string {
@@ -10,31 +13,49 @@ export function getAuth0Issuer(): string {
   return `https://${raw}/`;
 }
 
-/** Audiences validated on access tokens (`AUTH0_AUDIENCE`, optional `AUTH0_MOBILE_AUDIENCE`, fallback `AUTH0_CLIENT_ID`). */
-export function getAuth0Audiences(): string | string[] {
-  const extraRaw =
-    process.env.AUTH0_AUDIENCE ??
-    process.env.AUTH0_MOBILE_AUDIENCE ??
-    '';
+function audienceClaimValues(aud: unknown): string[] {
+  if (typeof aud === 'string') return [aud];
+  if (Array.isArray(aud)) return aud.map(String);
+  return [];
+}
+
+/** All audiences accepted for mobile bearer JWTs (access or id tokens). */
+export function getAuth0AudienceList(): string[] {
+  const extraRaw = [
+    process.env.AUTH0_AUDIENCE,
+    process.env.AUTH0_MOBILE_AUDIENCE,
+  ]
+    .filter(Boolean)
+    .join(',');
   const list = extraRaw
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  const clientId = process.env.AUTH0_CLIENT_ID?.trim();
-  const merged =
-    clientId && !list.includes(clientId)
-      ? [...list, clientId]
-      : list.length > 0
-        ? [...list]
-        : clientId
-          ? [clientId]
-          : [];
-  if (merged.length === 0) {
+  const webClientId = process.env.AUTH0_CLIENT_ID?.trim();
+  const mobileClientId =
+    process.env.AUTH0_MOBILE_CLIENT_ID?.trim() ?? AUTH0_MOBILE_CLIENT_ID_DEFAULT;
+  const userinfoAud = new URL('userinfo', getAuth0Issuer()).href;
+
+  const merged = [
+    ...list,
+    webClientId,
+    mobileClientId,
+    userinfoAud,
+  ].filter((v): v is string => Boolean(v));
+
+  const unique = [...new Set(merged)];
+  if (unique.length === 0) {
     throw new Error(
-      'Set AUTH0_AUDIENCE, AUTH0_MOBILE_AUDIENCE, or AUTH0_CLIENT_ID so mobile tokens can be verified'
+      'Set AUTH0_AUDIENCE, AUTH0_MOBILE_AUDIENCE, AUTH0_CLIENT_ID, or AUTH0_MOBILE_CLIENT_ID'
     );
   }
-  return merged.length === 1 ? merged[0]! : merged;
+  return unique;
+}
+
+/** @deprecated Use getAuth0AudienceList — kept for callers expecting string | string[]. */
+export function getAuth0Audiences(): string | string[] {
+  const audiences = getAuth0AudienceList();
+  return audiences.length === 1 ? audiences[0]! : audiences;
 }
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
@@ -52,18 +73,81 @@ export function extractBearerToken(request: NextRequest): string | null {
   return h.slice(7).trim() || null;
 }
 
-export async function verifyAuth0AccessToken(
+/** Verifies Auth0 access or id tokens presented as mobile bearer credentials. */
+export async function verifyAuth0BearerToken(token: string): Promise<JWTPayload> {
+  const issuer = getAuth0Issuer();
+  const allowed = getAuth0AudienceList();
+
+  try {
+    const { payload } = await jwtVerify(token, getJwks(), {
+      issuer,
+      audience: allowed.length === 1 ? allowed[0]! : allowed,
+      clockTolerance: 30,
+    });
+    return payload;
+  } catch (primary) {
+    if (primary instanceof Error && /compact JWS/i.test(primary.message)) {
+      throw new Error(
+        `${primary.message} (token is not a JWT — sign out and log in again)`
+      );
+    }
+
+    // Auth0 id tokens: validate signature + issuer, then check aud manually.
+    try {
+      const { payload } = await jwtVerify(token, getJwks(), {
+        issuer,
+        clockTolerance: 30,
+      });
+      const tokenAud = audienceClaimValues(payload.aud);
+      if (!tokenAud.some((a) => allowed.includes(a))) {
+        throw new Error(
+          `JWT audience mismatch: token aud=[${tokenAud.join(', ')}], allowed=[${allowed.join(', ')}]`
+        );
+      }
+      return payload;
+    } catch (secondary) {
+      if (
+        secondary instanceof Error &&
+        (secondary.message.includes('audience mismatch') ||
+          secondary.message.includes('expired'))
+      ) {
+        throw secondary;
+      }
+      let audHint = '';
+      try {
+        const decoded = decodeJwt(token);
+        audHint = ` (token aud=[${audienceClaimValues(decoded.aud).join(', ')}], iss=${String(decoded.iss ?? '?')})`;
+      } catch {
+        /* ignore decode errors */
+      }
+      const msg =
+        primary instanceof Error ? primary.message : 'JWT verification failed';
+      throw new Error(`${msg}${audHint}`);
+    }
+  }
+}
+
+/** @deprecated Alias for verifyAuth0BearerToken */
+export async function verifyAuth0AccessToken(token: string): Promise<JWTPayload> {
+  return verifyAuth0BearerToken(token);
+}
+
+/** Fetches profile claims when the access token JWT omits `email`. */
+export async function fetchAuth0UserInfo(
   accessToken: string
-): Promise<JWTPayload> {
-  const decoded = decodeJwt(accessToken);
-  console.log('[verifyAuth0AccessToken] Decoded token payload:', decoded);
-  console.log('[verifyAuth0AccessToken] Expected audiences:', getAuth0Audiences());
-  
-  const { payload } = await jwtVerify(accessToken, getJwks(), {
-    issuer: getAuth0Issuer(),
-    audience: getAuth0Audiences(),
+): Promise<{ sub?: string; email?: string; name?: string; nickname?: string }> {
+  const res = await fetch(new URL('userinfo', getAuth0Issuer()), {
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
-  return payload;
+  if (!res.ok) {
+    throw new Error(`Auth0 userinfo failed (${res.status})`);
+  }
+  return (await res.json()) as {
+    sub?: string;
+    email?: string;
+    name?: string;
+    nickname?: string;
+  };
 }
 
 export type MobileJwtUser = {

@@ -6,7 +6,8 @@ import type { HydratedDocument } from 'mongoose';
 import {
   claimsToMobileUser,
   extractBearerToken,
-  verifyAuth0AccessToken,
+  fetchAuth0UserInfo,
+  verifyAuth0BearerToken,
 } from '@/lib/mobileAuth';
 import { upsertCustomerFromAuth0Profile } from '@/lib/auth0SyncUser';
 
@@ -25,8 +26,20 @@ export async function resolveMobileActor(
   if (!raw) return { ok: false, status: 401, error: 'Missing Authorization Bearer token' };
 
   try {
-    const payload = await verifyAuth0AccessToken(raw);
-    const u = claimsToMobileUser(payload);
+    const payload = await verifyAuth0BearerToken(raw);
+    let u = claimsToMobileUser(payload);
+    if (!u.email) {
+      try {
+        const info = await fetchAuth0UserInfo(raw);
+        u = {
+          sub: u.sub || info.sub || '',
+          email: info.email ?? u.email,
+          name: u.name ?? info.name ?? info.nickname,
+        };
+      } catch {
+        /* userinfo optional when email already in token or user exists */
+      }
+    }
     if (!u.sub) return { ok: false, status: 401, error: 'Token missing sub' };
 
     await connectDB();
@@ -65,7 +78,8 @@ export async function resolveMobileActor(
       '[resolveMobileActor]',
       e instanceof Error ? e.message : e
     );
-    return { ok: false, status: 401, error: 'Invalid or expired access token' };
+    const msg = e instanceof Error ? e.message : 'Invalid or expired access token';
+    return { ok: false, status: 401, error: msg };
   }
 }
 

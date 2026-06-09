@@ -13,7 +13,12 @@ import kotlin.coroutines.suspendCoroutine
 object AuthConstants {
     const val AUTH0_DOMAIN = "n4consulting.us.auth0.com"
     const val AUTH0_CLIENT_ID = "VrzhxH5mE9gclkKHG5QOLhPivXFa1xNz"
+    /**
+     * Optional Auth0 API identifier. Leave null unless you created an API in Auth0 Dashboard.
+     * Setting an unregistered value causes "service not found" at login.
+     */
     val AUTH0_CUSTOM_API_AUDIENCE: String? = null
+    /** Whitelist this exact URL in Auth0 Allowed Callback URLs (mobile app only). */
     const val REDIRECT_URI = "finalentry://callback"
     const val PREFS_NAME = "finalentry_auth"
     const val KEY_ACCESS_TOKEN = "access_token"
@@ -36,13 +41,23 @@ class AuthManager(private val context: Context) {
     )
 
     val isLoggedIn: Boolean
-        get() = !prefs.getString(AuthConstants.KEY_ACCESS_TOKEN, null).isNullOrBlank()
+        get() = bearerToken() != null
+
+    val accessToken: String?
+        get() = prefs.getString(AuthConstants.KEY_ACCESS_TOKEN, null)
 
     val idToken: String?
         get() = prefs.getString(AuthConstants.KEY_ID_TOKEN, null)
 
-    val accessToken: String?
-        get() = prefs.getString(AuthConstants.KEY_ACCESS_TOKEN, null)
+    /**
+     * Bearer sent to mobile API routes. Prefer id token (JWT, aud = client id, includes email).
+     * Falls back to access token when a custom API audience is configured.
+     */
+    fun bearerToken(): String? {
+        val id = idToken?.trim().orEmpty()
+        if (id.isNotEmpty()) return id
+        return accessToken?.trim()?.takeIf { it.isNotEmpty() }
+    }
 
     private val serviceConfig = AuthorizationServiceConfiguration(
         Uri.parse("https://${AuthConstants.AUTH0_DOMAIN}/authorize"),
@@ -72,7 +87,15 @@ class AuthManager(private val context: Context) {
             if (tokenResponse != null) {
                 saveTokens(tokenResponse)
                 service.dispose()
-                cont.resume(tokenResponse.idToken ?: "")
+                val bearer =
+                    tokenResponse.idToken?.trim().orEmpty().ifEmpty {
+                        tokenResponse.accessToken?.trim().orEmpty()
+                    }
+                if (bearer.isEmpty()) {
+                    cont.resumeWithException(Exception("Auth0 returned no id or access token"))
+                } else {
+                    cont.resume(bearer)
+                }
             } else {
                 service.dispose()
                 cont.resumeWithException(ex ?: Exception("Token exchange failed"))

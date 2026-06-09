@@ -1,7 +1,6 @@
 package com.finalentry.mobile.android.ui
 
 import android.app.Activity
-import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -51,16 +50,17 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 
+private const val API_BASE_URL = "https://final-entry.vercel.app"
+
 @Composable
 fun FinalEntryRoot() {
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("fe_mobile", Context.MODE_PRIVATE) }
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    var apiBase by remember { mutableStateOf("https://10.0.0.196:3000/") }
+    val apiBase = API_BASE_URL
     val authManager = remember { AuthManager(context) }
-    var bearer by remember { mutableStateOf(authManager.idToken ?: "") }
+    var bearer by remember { mutableStateOf(authManager.bearerToken().orEmpty()) }
 
     val sdk =
         remember(apiBase, bearer) {
@@ -71,17 +71,12 @@ fun FinalEntryRoot() {
     var me by remember { mutableStateOf<MeResponseDto?>(null) }
     var loadErr by remember { mutableStateOf<String?>(null) }
 
-    fun persist() {
-        prefs.edit().putString("base", apiBase.trim()).apply()
-    }
-
     suspend fun loadMe() {
         loadErr = null
         if (bearer.trim().isEmpty()) {
             me = null
             return
         }
-        persist()
         sdk.fetchMe().fold(
             onSuccess = {
                 me = it
@@ -95,26 +90,41 @@ fun FinalEntryRoot() {
     }
 
     val loginLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
+        contract = ActivityResultContracts.StartActivityForResult(),
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            if (data != null) {
-                val response = AuthorizationResponse.fromIntent(data)
-                val error = AuthorizationException.fromIntent(data)
-                if (response != null) {
-                    scope.launch {
-                        try {
-                            val token = authManager.exchangeCode(response)
-                            bearer = token
-                        } catch (e: Exception) {
-                            loadErr = "Token exchange failed: ${e.message}"
-                        }
+        val data = result.data
+        if (result.resultCode != Activity.RESULT_OK) {
+            loadErr =
+                when {
+                    data == null -> "Login cancelled"
+                    else -> {
+                        val error = AuthorizationException.fromIntent(data)
+                        error?.errorDescription
+                            ?: error?.error
+                            ?: "Login failed (code ${result.resultCode})"
                     }
-                } else if (error != null) {
-                    loadErr = "Auth error: ${error.errorDescription ?: error.error ?: "Unknown error"}"
                 }
-            }
+            return@rememberLauncherForActivityResult
+        }
+        if (data == null) {
+            loadErr = "Login finished without a response"
+            return@rememberLauncherForActivityResult
+        }
+        val response = AuthorizationResponse.fromIntent(data)
+        val error = AuthorizationException.fromIntent(data)
+        when {
+            response != null ->
+                scope.launch {
+                    try {
+                        bearer = authManager.exchangeCode(response)
+                        loadErr = null
+                    } catch (e: Exception) {
+                        loadErr = "Token exchange failed: ${e.message}"
+                    }
+                }
+            error != null ->
+                loadErr = "Auth error: ${error.errorDescription ?: error.error ?: "Unknown error"}"
+            else -> loadErr = "Login failed: no authorization response"
         }
     }
 
