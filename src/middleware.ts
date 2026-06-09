@@ -6,7 +6,7 @@ import { auth0 } from './lib/auth0';
  * Dynamically intercepts and handles authentication routes (/auth/*)
  * and manages session rolling at the network edge.
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = new URL(request.url);
   console.log(`[Proxy] Intercepting: ${request.method} ${url.pathname}`);
 

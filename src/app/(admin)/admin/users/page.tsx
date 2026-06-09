@@ -101,13 +101,14 @@ export default function AdminUsersPage() {
       headerName: 'User', 
       flex: 1,
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, height: '100%' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2, height: '100%' }}>
           <Box sx={{ p: 1, bgcolor: tokens.border, borderRadius: '50%', display: 'flex', color: tokens.citrus }}>
             <PersonIcon fontSize="small" />
           </Box>
           <Box>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>{params.value}</Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(246, 243, 236, 0.4)' }}>{params.row.email}</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>{params.row.name}</Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(246, 243, 236, 0.7)' }}>{params.row.email}</Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(246, 243, 236, 0.4)' }}>ID: {params.row.auth0Id}</Typography>
           </Box>
         </Box>
       )
@@ -120,27 +121,42 @@ export default function AdminUsersPage() {
         const isAdm = params.value === 'admin';
         const isTech = params.value === 'technician';
         return (
-          <Chip 
-            label={params.value?.toUpperCase()} 
-            size="small"
-            icon={isAdm ? <AdminIcon /> : isTech ? <TechIcon /> : undefined}
-            sx={{ 
-              bgcolor: isAdm ? 'rgba(198, 241, 53, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-              color: isAdm ? tokens.citrus : tokens.chalk,
-              border: `1px solid ${isAdm ? tokens.citrus : tokens.border}`,
-              fontWeight: 600,
-              '& .MuiChip-icon': { color: 'inherit' }
-            }} 
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+            <Chip 
+              label={params.value?.toUpperCase()} 
+              size="small"
+              icon={isAdm ? <AdminIcon /> : isTech ? <TechIcon /> : undefined}
+              sx={{ 
+                bgcolor: isAdm ? 'rgba(198, 241, 53, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                color: isAdm ? tokens.citrus : tokens.chalk,
+                border: `1px solid ${isAdm ? tokens.citrus : tokens.border}`,
+                fontWeight: 600,
+                '& .MuiChip-icon': { color: 'inherit' }
+              }} 
+            />
+          </Box>
         );
       }
     },
-    { field: 'parish', headerName: 'Parish', width: 150 },
+    { 
+      field: 'parish', 
+      headerName: 'Parish', 
+      width: 150,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Typography variant="body2">{params.value}</Typography>
+        </Box>
+      )
+    },
     { 
       field: 'createdAt', 
       headerName: 'Joined', 
       width: 150,
-      valueGetter: (value) => new Date(value).toLocaleDateString()
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Typography variant="body2">{new Date(params.value).toLocaleDateString()}</Typography>
+        </Box>
+      )
     },
     {
       field: 'actions',
@@ -148,9 +164,11 @@ export default function AdminUsersPage() {
       width: 80,
       sortable: false,
       renderCell: (params) => (
-        <IconButton onClick={(e) => handleActionClick(e, params.row)} sx={{ color: tokens.chalk }}>
-          <MoreIcon />
-        </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <IconButton onClick={(e) => handleActionClick(e, params.row)} sx={{ color: tokens.chalk }}>
+            <MoreIcon />
+          </IconButton>
+        </Box>
       )
     }
   ];
@@ -215,7 +233,8 @@ export default function AdminUsersPage() {
           pageSizeOptions={[10, 25, 50]}
           disableRowSelectionOnClick
           autoHeight
-          rowHeight={80}
+          getRowHeight={() => 'auto'}
+          getEstimatedRowHeight={() => 100}
           columnHeaderHeight={60}
           loading={loading}
         />

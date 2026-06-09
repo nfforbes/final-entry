@@ -18,6 +18,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Mobile app (KMP)
+
+The Compose Android client lives under **`mobile/`** (see **`mobile/README.md`**). Bearer `/api/mobile/*` routes use Auth0 JWKS (`AUTH0_DOMAIN`, `AUTH0_AUDIENCE`, optional `AUTH0_MOBILE_AUDIENCE`). Paste an access token in the app whose audience matches those settings.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
