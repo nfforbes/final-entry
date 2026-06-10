@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.finalentry.mobile"
-version = "1.0.0-SNAPSHOT"
+version = "1.0.2"
 
 kotlin {
     androidTarget {

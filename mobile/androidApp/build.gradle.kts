@@ -12,10 +12,11 @@ android {
         applicationId = "com.finalentry.mobile.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0-SNAPSHOT"
+        versionCode = 3
+        versionName = "1.0.2"
         vectorDrawables { useSupportLibrary = true }
         manifestPlaceholders["appAuthRedirectScheme"] = "finalentry"
+        buildConfigField("String", "API_BASE_URL", "\"https://final-entry.vercel.app\"")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -37,7 +38,10 @@ android {
         }
     }
     
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 }
 
 kotlin {

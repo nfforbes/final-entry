@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.finalentry.mobile.BearerTokenAccessor
 import com.finalentry.mobile.FinalEntrySdk
 import com.finalentry.mobile.SdkConfig
+import com.finalentry.mobile.android.BuildConfig
 import com.finalentry.mobile.android.R
 import com.finalentry.mobile.android.auth.AuthManager
 import com.finalentry.mobile.model.MeResponseDto
@@ -50,15 +51,22 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 
-private const val API_BASE_URL = "https://final-entry.vercel.app"
-
 @Composable
 fun FinalEntryRoot() {
     val context = LocalContext.current
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val apiBase = API_BASE_URL
+    // Baked into release builds via build.gradle.kts buildConfigField
+    val apiBase = BuildConfig.API_BASE_URL
+
+    // Drop legacy dev URL cached by older app versions
+    LaunchedEffect(Unit) {
+        context.getSharedPreferences("fe_mobile", android.content.Context.MODE_PRIVATE)
+            .edit()
+            .remove("base")
+            .apply()
+    }
     val authManager = remember { AuthManager(context) }
     var bearer by remember { mutableStateOf(authManager.bearerToken().orEmpty()) }
 
