@@ -46,7 +46,7 @@ kotlin {
 
 android {
     namespace = "com.finalentry.mobile.shared.android"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         minSdk = 26
     }

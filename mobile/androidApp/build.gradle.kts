@@ -20,11 +20,11 @@ val releaseSigningProps = Properties().apply {
 
 android {
     namespace = "com.finalentry.mobile.android"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.finalentry.mobile.android"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         // CI: -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=1.0.2
         versionCode = (project.findProperty("VERSION_CODE") as? String)?.toIntOrNull() ?: 3
         versionName = (project.findProperty("VERSION_NAME") as? String)

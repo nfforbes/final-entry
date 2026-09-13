@@ -116,15 +116,17 @@ platform :ios do
       keychain_password: keychain_password
     )
 
-    if distribution_identity_in_keychain?(keychain_path)
-      UI.success("Using Apple Distribution identity from CI keychain")
-    else
-      UI.important("No Distribution identity in keychain; creating one via App Store Connect API")
+    if ENV["IOS_DISTRIBUTION_CERT_P12_BASE64"].to_s.strip.empty?
+      UI.important("Ensuring Apple Distribution certificate via App Store Connect API")
       ensure_distribution_cert!(
         api_key: api_key,
         keychain_path: keychain_path,
         keychain_password: keychain_password
       )
+    elsif distribution_identity_in_keychain?(keychain_path)
+      UI.success("Using imported Apple Distribution identity from CI keychain")
+    else
+      UI.user_error!("IOS_DISTRIBUTION_CERT_P12_BASE64 was set but no Apple Distribution identity found in keychain")
     end
 
     profile_uuid = sigh(

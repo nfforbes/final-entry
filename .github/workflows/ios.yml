@@ -127,8 +127,9 @@ jobs:
             ~/Library/Keychains/finalentry-ci.keychain-db-shm
             ~/Library/Keychains/finalentry-ci.keychain-db-wal
             ~/Library/MobileDevice/Provisioning Profiles
-          key: ios-dist-keychain-${{ secrets.APPLE_TEAM_ID }}-v1
+          key: ios-dist-keychain-${{ secrets.APPLE_TEAM_ID }}-v2
           restore-keys: |
+            ios-dist-keychain-${{ secrets.APPLE_TEAM_ID }}-v2
             ios-dist-keychain-${{ secrets.APPLE_TEAM_ID }}-
 
       - name: Build IPA + upload TestFlight (Fastlane)
@@ -151,7 +152,7 @@ jobs:
             ~/Library/Keychains/finalentry-ci.keychain-db-shm
             ~/Library/Keychains/finalentry-ci.keychain-db-wal
             ~/Library/MobileDevice/Provisioning Profiles
-          key: ios-dist-keychain-${{ secrets.APPLE_TEAM_ID }}-v1-${{ github.run_id }}
+          key: ios-dist-keychain-${{ secrets.APPLE_TEAM_ID }}-v2-${{ github.run_id }}
 
       - name: Upload IPA artifact
         if: always()
