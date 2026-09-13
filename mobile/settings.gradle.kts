@@ -20,3 +20,4 @@ dependencyResolutionManagement {
 rootProject.name = "final-entry-mobile"
 include(":shared")
 include(":androidApp")
+include(":composeApp")

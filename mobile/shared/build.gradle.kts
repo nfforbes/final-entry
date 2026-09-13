@@ -17,6 +17,13 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation("io.ktor:ktor-client-core:3.0.1")

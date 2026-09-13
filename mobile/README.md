@@ -1,6 +1,6 @@
 # Final Entry mobile (KMP)
 
-- **Modules:** `shared` (Ktor client + models + `FinalEntrySdk`), `androidApp` (Compose shells for customer / technician / admin).
+- **Modules:** `shared` (Ktor + `FinalEntrySdk`), `androidApp` (Android Compose UI), `composeApp` (iOS Compose UI), `iosApp` (Xcode shell).
 
 ## Auth0 dashboard (required for Login)
 
@@ -29,10 +29,42 @@ Android **API base URL** defaults to `https://final-entry.vercel.app` (see `Fina
 
 ## Build
 
-Open the `mobile/` folder in Android Studio and sync Gradle.
+Open the `mobile/` folder in Android Studio and sync Gradle, or use the wrapper:
 
-There is no committed Gradle wrapper script in-repo; generating one (`gradle wrapper`) is optional once the Android Gradle Plugin toolchain is configured locally.
+```bash
+cd mobile
+./gradlew :androidApp:assembleDebug          # Android
+./gradlew :androidApp:bundleRelease          # signed AAB (needs keystore.properties)
+```
+
+### CI/CD
+
+GitHub Actions builds and deploys both apps — see **[CI.md](./CI.md)** for workflow details and required secrets.
 
 ## iOS
 
-`shared` includes `iosArm64` / `iosSimulatorArm64`; a standalone Xcode app shell is left to product packaging as in the architecture plan.
+Requires a **Mac** with Xcode 15+.
+
+| Module | Role |
+|---|---|
+| `shared` | KMP core (exports `Shared.framework`) |
+| `composeApp` | Compose Multiplatform UI + Auth0 (exports `ComposeApp.framework`) |
+| `iosApp` | Thin SwiftUI shell that hosts `MainViewController()` |
+
+### Build on Mac
+
+```bash
+cd mobile
+./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+open iosApp/iosApp.xcodeproj
+```
+
+In Xcode: set **Team** in `iosApp/Configuration/Config.xcconfig`, then run on simulator or device.
+
+Auth0: add `finalentry://callback` to the Native app's **Allowed Callback URLs** (same as Android). iOS registers the `finalentry` URL scheme in `iosApp/iosApp/Info.plist`.
+
+From Gradle only (no Xcode UI):
+
+```bash
+./gradlew :composeApp:linkReleaseFrameworkIosArm64
+```

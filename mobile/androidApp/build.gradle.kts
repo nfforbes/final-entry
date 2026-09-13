@@ -1,8 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("plugin.compose")
     kotlin("plugin.serialization")
+}
+
+fun releaseSigningProp(envKey: String, propKey: String, props: Properties): String? =
+    System.getenv(envKey)?.takeIf { it.isNotBlank() }
+        ?: props.getProperty(propKey)?.takeIf { it.isNotBlank() }
+
+val releaseSigningProps = Properties().apply {
+    val propsFile = rootProject.file("keystore.properties")
+    if (propsFile.exists()) {
+        propsFile.inputStream().use { load(it) }
+    }
 }
 
 android {
@@ -24,16 +37,25 @@ android {
     }
     signingConfigs {
         create("release") {
-            storeFile = file("../../my-release-key.jks")
-            storePassword = "3cDVLHM4wmPLsbnPbhJt" // Replace with your keystore password
-            keyAlias = "my-key-alias"
-            keyPassword = "3cDVLHM4wmPLsbnPbhJt" // Replace with your key password
+            val storePath =
+                System.getenv("ANDROID_KEYSTORE_PATH")
+                    ?: releaseSigningProp("ANDROID_KEYSTORE_PATH", "storeFile", releaseSigningProps)
+            if (!storePath.isNullOrBlank()) {
+                storeFile = rootProject.file(storePath)
+                storePassword =
+                    releaseSigningProp("ANDROID_KEYSTORE_PASSWORD", "storePassword", releaseSigningProps)
+                keyAlias = releaseSigningProp("ANDROID_KEY_ALIAS", "keyAlias", releaseSigningProps)
+                keyPassword =
+                    releaseSigningProp("ANDROID_KEY_PASSWORD", "keyPassword", releaseSigningProps)
+            }
         }
     }
-    
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfigs.findByName("release")?.storeFile?.let {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
         }
     }

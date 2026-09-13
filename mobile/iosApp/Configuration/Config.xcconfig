@@ -1,0 +1,5 @@
+TEAM_ID=
+BUNDLE_ID=com.finalentry.mobile.ios
+APP_NAME=Final Entry
+FRAMEWORK_SEARCH_PATHS=$(inherited) $(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+OTHER_LDFLAGS=$(inherited) -framework ComposeApp

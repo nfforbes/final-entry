@@ -42,9 +42,16 @@ next-env.d.ts
 
 certificates
 
-# kotlin
+# kotlin / mobile
 /mobile/.kotlin
 /mobile/androidApp/build
+/mobile/composeApp/build
 /mobile/.gradle
 /mobile/.idea
 /mobile/shared/build
+/mobile/keystore.properties
+/mobile/local.properties
+/mobile/iosApp/build
+/mobile/**/build/xcode-frameworks
+*.jks
+*.keystore
