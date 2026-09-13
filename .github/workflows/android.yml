@@ -111,7 +111,7 @@ jobs:
           KEYSTORE_PATH="${RUNNER_TEMP}/finalentry-upload.jks"
           JSON_KEY_PATH="${RUNNER_TEMP}/play-store.json"
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
-          printf '%s\n' "$PLAY_STORE_JSON_KEY" > "$JSON_KEY_PATH"
+          printf '%s' "$PLAY_STORE_JSON_KEY" > "$JSON_KEY_PATH"
           echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
           echo "PLAY_STORE_JSON_KEY_PATH=$JSON_KEY_PATH" >> "$GITHUB_ENV"
 

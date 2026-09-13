@@ -28,7 +28,8 @@ import com.finalentry.mobile.model.MeResponseDto
 import kotlinx.coroutines.launch
 
 @Composable
-fun FinalEntryApp(auth: PlatformAuth = remember { PlatformAuth() }) {
+fun FinalEntryApp() {
+    val auth = remember { PlatformAuth() }
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var bearer by remember { mutableStateOf(auth.loadBearerToken().orEmpty()) }

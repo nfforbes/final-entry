@@ -13,7 +13,7 @@ internal object AuthPkce {
 
     @OptIn(ExperimentalEncodingApi::class)
     fun s256Challenge(verifier: String): String {
-        val digest = SHA256().update(verifier.encodeToByteArray()).digest()
+        val digest = SHA256().digest(verifier.encodeToByteArray())
         return Base64.UrlSafe.encode(digest).trimEnd('=')
     }
 }

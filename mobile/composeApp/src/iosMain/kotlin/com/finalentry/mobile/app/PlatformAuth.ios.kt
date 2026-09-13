@@ -19,7 +19,6 @@ import platform.AuthenticationServices.ASPresentationAnchor
 import platform.Foundation.NSCharacterSet
 import platform.Foundation.NSString
 import platform.Foundation.NSURL
-import platform.Foundation.NSURLComponents
 import platform.Foundation.NSUserDefaults
 import platform.Foundation.URLQueryAllowedCharacterSet
 import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
@@ -141,10 +140,15 @@ private object IosAuth0 {
     }
 
     private fun parseQueryParam(url: String, key: String): String? {
-        val components = NSURLComponents(string = url, resolvingAgainstBaseURL = false)
-        return components?.queryItems
-            ?.firstOrNull { it.name == key }
-            ?.value
+        val query = url.substringAfter('?', "").substringBefore('#')
+        for (part in query.split('&')) {
+            val idx = part.indexOf('=')
+            if (idx <= 0) continue
+            if (part.substring(0, idx) == key) {
+                return part.substring(idx + 1)
+            }
+        }
+        return null
     }
 }
 
