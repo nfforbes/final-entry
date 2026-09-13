@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun FinalEntryApp() {
-    val auth = remember { PlatformAuth() }
+    val auth = remember { createPlatformAuth() }
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var bearer by remember { mutableStateOf(auth.loadBearerToken().orEmpty()) }

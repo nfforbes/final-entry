@@ -7,3 +7,5 @@ expect class PlatformAuth {
     suspend fun login(): Result<String>
     fun logout()
 }
+
+expect fun createPlatformAuth(): PlatformAuth

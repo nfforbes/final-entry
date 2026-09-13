@@ -29,6 +29,8 @@ import kotlin.coroutines.resume
 
 private const val TOKEN_KEY = "fe_bearer"
 
+actual fun createPlatformAuth(): PlatformAuth = PlatformAuth()
+
 actual class PlatformAuth {
     actual fun loadBearerToken(): String? = NSUserDefaults.standardUserDefaults.stringForKey(TOKEN_KEY)
 
