@@ -39,7 +39,12 @@ cd mobile
 
 ### CI/CD
 
-GitHub Actions builds and deploys both apps — see **[CI.md](./CI.md)** for workflow details and required secrets.
+Push to `main` (when `mobile/**` changes) builds and deploys via Fastlane:
+
+- **Android** → Google Play internal track
+- **iOS** → TestFlight
+
+See **[CI.md](./CI.md)** for secrets and first-deploy checklist. Run `.\mobile\scripts\set-github-secrets.ps1` to configure GitHub secrets.
 
 ## iOS
 

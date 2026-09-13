@@ -25,8 +25,12 @@ android {
         applicationId = "com.finalentry.mobile.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.2"
+        // CI: -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=1.0.2
+        versionCode = (project.findProperty("VERSION_CODE") as? String)?.toIntOrNull() ?: 3
+        versionName = (project.findProperty("VERSION_NAME") as? String)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: "1.0.2"
         vectorDrawables { useSupportLibrary = true }
         manifestPlaceholders["appAuthRedirectScheme"] = "finalentry"
         buildConfigField("String", "API_BASE_URL", "\"https://final-entry.vercel.app\"")

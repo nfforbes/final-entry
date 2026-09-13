@@ -1,53 +1,94 @@
 # Mobile CI/CD (GitHub Actions)
 
+Based on the [LuKaria](https://github.com/nforbesCci/LuKaria) Fastlane + GitHub Actions setup.
+
 ## Workflows
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| **Mobile CI** (`.github/workflows/mobile-ci.yml`) | Push/PR when `mobile/**` changes | Android debug APK + iOS simulator build |
-| **Mobile Release** (`.github/workflows/mobile-release.yml`) | Manual **Actions → Mobile Release → Run workflow** | Signed AAB → Google Play; IPA → TestFlight |
+| **Android Build & Play Store** (`.github/workflows/android.yml`) | Push/PR on `mobile/**`; deploy on push to `main` | Compile check + signed AAB → Google Play |
+| **iOS Build & TestFlight** (`.github/workflows/ios.yml`) | Push/PR on `mobile/**`; deploy on push to `main` | KMP iOS compile + archive → TestFlight |
+
+Package IDs: **`com.finalentry.mobile.android`** · **`com.finalentry.mobile.ios`**
+
+`versionCode` / iOS `CFBundleVersion` = GitHub Actions `run_number` on deploy.  
+`versionName` = `1.0.2` (bump in workflow `VERSION_NAME` env when shipping a marketing version).
+
+## One-time setup script
+
+From repo root (Windows):
+
+```powershell
+.\mobile\scripts\set-github-secrets.ps1
+```
+
+This sets Android + Apple secrets on **`nfforbes/final-entry`**. You may still need to copy **`PLAY_STORE_JSON_KEY`** and **`APP_STORE_CONNECT_API_ISSUER_ID`** from [LuKaria repo secrets](https://github.com/nforbesCci/LuKaria/settings/secrets/actions) if the script cannot find them locally.
 
 ## Required GitHub secrets
 
+Repo → **Settings → Secrets and variables → Actions**:
+
 ### Android (Google Play)
 
-| Secret | Description |
+| Secret | Purpose |
 |---|---|
-| `ANDROID_KEYSTORE_BASE64` | Base64-encoded `.jks` / `.keystore` file |
+| `ANDROID_KEYSTORE_BASE64` | Upload keystore (`.jks`) as base64 |
 | `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
-| `ANDROID_KEY_ALIAS` | Key alias (e.g. `my-key-alias`) |
+| `ANDROID_KEY_ALIAS` | Key alias (`my-key-alias`) |
 | `ANDROID_KEY_PASSWORD` | Key password |
-| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Google Play Console service account JSON (Play Admin API enabled) |
+| `PLAY_STORE_JSON_KEY` | Full Play Developer API service account JSON |
 
-Create the base64 keystore locally:
+Encode keystore (PowerShell):
 
-```bash
-base64 -w 0 my-release-key.jks   # Linux
-base64 -i my-release-key.jks   # macOS
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("my-release-key.jks")) | Set-Clipboard
 ```
 
-In [Google Play Console](https://play.google.com/console): **Setup → API access** → link a service account with **Release to production** (or appropriate track) permission.
+Play Console → **Users and permissions** → invite the service account with **Release apps to testing tracks**.
 
 ### iOS (App Store Connect / TestFlight)
 
-| Secret | Description |
+| Secret | Required? | Purpose |
+|---|---|---|
+| `APPLE_TEAM_ID` | Yes | 10-character Apple Developer Team ID |
+| `APP_STORE_CONNECT_API_ISSUER_ID` | Yes | ASC API issuer UUID |
+| `APP_STORE_CONNECT_API_KEY_ID` | Yes | ASC API key ID |
+| `APP_STORE_CONNECT_API_KEY_P8` | Yes | Contents of the `.p8` API key file |
+| `IOS_DISTRIBUTION_CERT_P12_BASE64` | Optional | Pre-exported Distribution `.p12` (Fastlane can create one via API) |
+| `IOS_DISTRIBUTION_CERT_PASSWORD` | Optional | `.p12` export password |
+
+ASC API key needs **Admin** or **App Manager** role. Register bundle ID `com.finalentry.mobile.ios` before first upload.
+
+## Local signed Android bundle
+
+```bash
+cd mobile
+cp keystore.properties.example keystore.properties   # fill in passwords
+./gradlew :androidApp:bundleRelease -PVERSION_CODE=4 -PVERSION_NAME=1.0.2
+```
+
+## First deploy checklist
+
+### Google Play
+1. App exists: `com.finalentry.mobile.android`
+2. Play App Signing enabled; upload key matches `my-release-key.jks`
+3. All five Android secrets set
+4. Push to `main` or run **Android Build & Play Store** workflow manually
+
+### Apple
+1. App exists in App Store Connect: **Final Entry** / `com.finalentry.mobile.ios`
+2. Four required iOS secrets set
+3. Push to `main` or run **iOS Build & TestFlight** workflow manually
+4. After TestFlight processing, submit for App Review in App Store Connect
+
+CI does **not** auto-promote to Play production or the public App Store.
+
+## If deploy fails
+
+| Symptom | Fix |
 |---|---|
-| `APPLE_TEAM_ID` | 10-character Apple Team ID |
-| `APPLE_CERTIFICATE_BASE64` | Base64-encoded **Apple Distribution** `.p12` |
-| `APPLE_CERTIFICATE_PASSWORD` | `.p12` export password |
-| `APP_STORE_CONNECT_ISSUER_ID` | App Store Connect API issuer UUID |
-| `APP_STORE_CONNECT_KEY_ID` | API key ID (e.g. `ABC123DEFG`) |
-| `APP_STORE_CONNECT_PRIVATE_KEY` | Contents of the `.p8` API key file |
-
-Create an App Store Connect **API key** with **App Manager** (or Admin) role. Register bundle ID `com.finalentry.mobile.ios` in the Apple Developer portal before first upload.
-
-## Local release signing
-
-Copy `keystore.properties.example` → `keystore.properties` (gitignored) for local `./gradlew :androidApp:bundleRelease`.
-
-## Release checklist
-
-1. Bump `versionCode` / `versionName` in `androidApp/build.gradle.kts` and `iosApp/iosApp/Info.plist`.
-2. Add GitHub secrets (once).
-3. Run **Mobile Release** workflow; choose Play track (`internal` recommended first).
-4. After TestFlight processing, submit for App Review in App Store Connect.
+| Missing secret … | Add secret; re-run workflow |
+| Package not found (Android) | Create Play app with id `com.finalentry.mobile.android` |
+| Insufficient Play permissions | Grant service account release access on that app |
+| Distribution cert limit (iOS) | Revoke unused certs in Apple Developer portal; re-run |
+| Bundle ID not found (iOS) | Register `com.finalentry.mobile.ios` in Apple Developer |
