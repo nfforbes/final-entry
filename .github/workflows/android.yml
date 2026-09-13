@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  JAVA_VERSION: "17"
+  JAVA_VERSION: "21"
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.daemon.jvmargs=-Xmx4g"
   VERSION_NAME: "1.0.2"
 
