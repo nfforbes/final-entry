@@ -1,4 +1,4 @@
-TEAM_ID=TEAM_ID_PLACEHOLDER
+TEAM_ID=3CPQ68PXHC
 BUNDLE_ID=com.finalentry.mobile.ios
 APP_NAME=Final Entry
 // xcconfig treats // as a comment — break the URL with an empty $( ) so https:// survives.
