@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.finalentry.mobile.BearerTokenAccessor
 import com.finalentry.mobile.FinalEntrySdk
 import com.finalentry.mobile.SdkConfig
+import com.finalentry.mobile.isUnauthorized
 import com.finalentry.mobile.model.MeResponseDto
 import kotlinx.coroutines.launch
 
@@ -43,6 +44,13 @@ fun FinalEntryApp() {
     var me by remember { mutableStateOf<MeResponseDto?>(null) }
     var loadErr by remember { mutableStateOf<String?>(null) }
 
+    fun forceLogout() {
+        auth.logout()
+        bearer = ""
+        me = null
+        loadErr = null
+    }
+
     suspend fun loadMe() {
         loadErr = null
         if (bearer.trim().isEmpty()) {
@@ -55,8 +63,13 @@ fun FinalEntryApp() {
                 loadErr = null
             },
             onFailure = {
-                me = null
-                loadErr = it.message ?: "Unauthorized"
+                if (it.isUnauthorized()) {
+                    forceLogout()
+                    scope.launch { snack.showSnackbar("Session expired. Please log in again.") }
+                } else {
+                    me = null
+                    loadErr = it.message ?: "Unauthorized"
+                }
             },
         )
     }
@@ -122,9 +135,7 @@ fun FinalEntryApp() {
                 }
                 Button(
                     onClick = {
-                        auth.logout()
-                        bearer = ""
-                        me = null
+                        forceLogout()
                         scope.launch { snack.showSnackbar("Logged out") }
                     },
                     modifier = Modifier.padding(top = 16.dp),

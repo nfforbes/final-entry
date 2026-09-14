@@ -45,6 +45,7 @@ import com.finalentry.mobile.SdkConfig
 import com.finalentry.mobile.android.BuildConfig
 import com.finalentry.mobile.android.R
 import com.finalentry.mobile.android.auth.AuthManager
+import com.finalentry.mobile.isUnauthorized
 import com.finalentry.mobile.model.MeResponseDto
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
@@ -79,6 +80,18 @@ fun FinalEntryRoot() {
     var me by remember { mutableStateOf<MeResponseDto?>(null) }
     var loadErr by remember { mutableStateOf<String?>(null) }
 
+    fun forceLogout() {
+        bearer = ""
+        me = null
+        loadErr = null
+        authManager.logout()
+    }
+
+    val onAuthFailure = {
+        forceLogout()
+        scope.launch { snack.showSnackbar("Session expired. Please log in again.") }
+    }
+
     suspend fun loadMe() {
         loadErr = null
         if (bearer.trim().isEmpty()) {
@@ -91,8 +104,12 @@ fun FinalEntryRoot() {
                 loadErr = null
             },
             onFailure = {
-                me = null
-                loadErr = it.message ?: "Unauthorized"
+                if (it.isUnauthorized()) {
+                    forceLogout()
+                } else {
+                    me = null
+                    loadErr = it.message ?: "Unauthorized"
+                }
             },
         )
     }
@@ -227,9 +244,7 @@ fun FinalEntryRoot() {
                                 text = { Text("Logout") },
                                 onClick = {
                                     expanded = false
-                                    bearer = ""
-                                    me = null
-                                    authManager.logout()
+                                    forceLogout()
                                     scope.launch { snack.showSnackbar("Logged out successfully") }
                                 }
                             )
@@ -246,16 +261,11 @@ fun FinalEntryRoot() {
                                 sdk = sdk,
                                 me = checkNotNull(me),
                                 snack = snack,
-                                onForgetToken = {
-                                    bearer = ""
-                                    me = null
-                                    authManager.logout()
-                                    scope.launch { snack.showSnackbar("Logged out successfully") }
-                                },
+                                onAuthFailure = onAuthFailure,
                             )
 
-                        "admin" -> AdminPortal(sdk = sdk, snack = snack)
-                        "technician" -> TechnicianPortal(sdk = sdk, snack = snack)
+                        "admin" -> AdminPortal(sdk = sdk, snack = snack, onAuthFailure = onAuthFailure)
+                        "technician" -> TechnicianPortal(sdk = sdk, snack = snack, onAuthFailure = onAuthFailure)
                         else -> Text("Role \"$role\" is not routed. Complete an invite or login once on web.", modifier = Modifier.padding(16.dp))
                     }
                 }

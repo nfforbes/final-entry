@@ -45,7 +45,11 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
-fun TechnicianPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
+fun TechnicianPortal(
+    sdk: FinalEntrySdk,
+    snack: SnackbarHostState,
+    onAuthFailure: () -> Unit,
+) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var jobs by remember { mutableStateOf<List<JsonObject>>(emptyList()) }
@@ -60,7 +64,7 @@ fun TechnicianPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                             runCatching { element as JsonObject }.getOrNull()
                         }
                 }
-                .onFailure { err -> snack.showSnackbar(err.message ?: "Jobs failed") }
+                .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Jobs failed") }
         }
     }
 
@@ -141,7 +145,7 @@ fun TechnicianPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                         snack.showSnackbar("Saved")
                     }
                 }
-                .onFailure { err -> snack.showSnackbar(err.message ?: "Patch failed") }
+                .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Patch failed") }
         }
     }
 
@@ -210,7 +214,7 @@ fun TechnicianPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                             snack.showSnackbar("Findings saved") 
                                             fetchJobs()
                                         }
-                                        .onFailure { err -> snack.showSnackbar(err.message ?: "Failed to save findings") }
+                                        .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed to save findings") }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()

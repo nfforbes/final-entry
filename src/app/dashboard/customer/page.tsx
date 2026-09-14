@@ -1,13 +1,19 @@
 'use client';
 
-import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import React, { useEffect } from 'react';
+import { Box, Typography } from '@mui/material';
 import { tokens } from '@/lib/theme';
 import Link from 'next/link';
 import { useUser } from '@auth0/nextjs-auth0/client';
 
 export default function CustomerDashboard() {
   const { user, isLoading } = useUser();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      window.location.href = '/auth/logout?returnTo=/';
+    }
+  }, [isLoading, user]);
 
   if (isLoading) {
     return (
@@ -20,24 +26,7 @@ export default function CustomerDashboard() {
   if (!user) {
     return (
       <Box component="main" sx={{ pt: '72px', minHeight: '100vh', bgcolor: tokens.obsidian, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Box sx={{ textAlign: 'center', maxWidth: 480, px: 3 }}>
-          <Typography sx={{ fontSize: '3rem', mb: 3 }}>🔐</Typography>
-          <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, mb: 2 }}>
-            Sign In Required
-          </Typography>
-          <Typography sx={{ color: 'rgba(246,243,236,0.6)', mb: 5 }}>
-            Please sign in to access your customer portal and view your quote history.
-          </Typography>
-          <Button
-            component="a"
-            href="/auth/login"
-            variant="contained"
-            id="dashboard-login"
-            sx={{ bgcolor: tokens.citrus, color: tokens.obsidian, fontWeight: 700, px: 5 }}
-          >
-            Sign In / Register
-          </Button>
-        </Box>
+        <Typography sx={{ color: 'rgba(246,243,236,0.5)' }}>Redirecting…</Typography>
       </Box>
     );
   }

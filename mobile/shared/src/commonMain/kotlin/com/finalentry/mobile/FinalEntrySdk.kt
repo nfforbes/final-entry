@@ -65,7 +65,11 @@ class FinalEntrySdk(private val config: SdkConfig) {
         if (!ok) {
             val err = runCatching { fmt.decodeFromString<ApiErrorEnvelope>(text) }
                 .getOrNull()?.error
-            throw IllegalStateException(err ?: text.ifBlank { resp.status.description })
+            val message = err ?: text.ifBlank { resp.status.description }
+            if (resp.status.value == 401 || resp.status.value == 403) {
+                throw UnauthorizedException(message)
+            }
+            throw IllegalStateException(message)
         }
     }
 

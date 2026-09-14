@@ -52,7 +52,7 @@ fun CustomerPortal(
     sdk: FinalEntrySdk,
     me: MeResponseDto,
     snack: SnackbarHostState,
-    onForgetToken: () -> Unit,
+    onAuthFailure: () -> Unit,
 ) {
     var tab by remember { mutableIntStateOf(0) }
     Scaffold(
@@ -96,12 +96,12 @@ fun CustomerPortal(
     ) { inset ->
         Column(Modifier.padding(inset).padding(12.dp).fillMaxSize()) {
             when (tab) {
-                0 -> CustomerBookingScreen(sdk, me, snack)
-                1 -> CustomerOrdersScreen(sdk, snack)
-                2 -> CustomerTrackingScreen(sdk, snack)
-                3 -> CustomerProfile(me, onForgetToken)
-                4 -> AdminPortal(sdk, snack)
-                else -> CustomerProfile(me, onForgetToken)
+                0 -> CustomerBookingScreen(sdk, me, snack, onAuthFailure)
+                1 -> CustomerOrdersScreen(sdk, snack, onAuthFailure)
+                2 -> CustomerTrackingScreen(sdk, snack, onAuthFailure)
+                3 -> CustomerProfile(me, onAuthFailure)
+                4 -> AdminPortal(sdk, snack, onAuthFailure)
+                else -> CustomerProfile(me, onAuthFailure)
             }
         }
     }
@@ -112,6 +112,7 @@ private fun CustomerBookingScreen(
     sdk: FinalEntrySdk,
     me: MeResponseDto,
     snack: SnackbarHostState,
+    onAuthFailure: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var services by remember { mutableStateOf<List<ServiceLiteDto>>(emptyList()) }
@@ -124,9 +125,9 @@ private fun CustomerBookingScreen(
     var banner by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        sdk.fetchServices().onFailure {
-            banner = it.message
-        }.onSuccess { services = it.services }
+        sdk.fetchServices()
+            .onFailure { handleSdkFailureOrBanner(it, onAuthFailure) { banner = it } }
+            .onSuccess { services = it.services }
     }
 
     Column(
@@ -206,10 +207,7 @@ private fun CustomerBookingScreen(
 
 
                         .onFailure {
-
-                            banner =
-                                it.message
-
+                            handleSdkFailureOrBanner(it, onAuthFailure) { banner = it }
                         }
 
 
@@ -245,7 +243,11 @@ private fun CustomerBookingScreen(
 
 
 @Composable
-private fun CustomerOrdersScreen(sdk: FinalEntrySdk, snack: SnackbarHostState) {
+private fun CustomerOrdersScreen(
+    sdk: FinalEntrySdk,
+    snack: SnackbarHostState,
+    onAuthFailure: () -> Unit,
+) {
     val scope = rememberCoroutineScope()
     var items by remember { mutableStateOf<List<JsonObject>>(emptyList()) }
 
@@ -258,9 +260,7 @@ private fun CustomerOrdersScreen(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                     }
             }
             .onFailure {
-                scope.launch {
-                    snack.showSnackbar(it.message ?: "Failed to load orders")
-                }
+                handleSdkFailure(it, snack, onAuthFailure, "Failed to load orders")
             }
     }
 
@@ -276,7 +276,11 @@ private fun CustomerOrdersScreen(sdk: FinalEntrySdk, snack: SnackbarHostState) {
 }
 
 @Composable
-private fun CustomerTrackingScreen(sdk: FinalEntrySdk, snack: SnackbarHostState) {
+private fun CustomerTrackingScreen(
+    sdk: FinalEntrySdk,
+    snack: SnackbarHostState,
+    onAuthFailure: () -> Unit,
+) {
     val scope = rememberCoroutineScope()
     var token by remember { mutableStateOf("") }
     var job by remember { mutableStateOf<JsonObject?>(null) }
@@ -302,7 +306,7 @@ private fun CustomerTrackingScreen(sdk: FinalEntrySdk, snack: SnackbarHostState)
                                 }.getOrNull()
                         }
                         .onFailure {
-                            snack.showSnackbar(it.message ?: "Tracking failed")
+                            handleSdkFailure(it, snack, onAuthFailure, "Tracking failed")
                         }
                 }
             },
@@ -351,7 +355,7 @@ private fun CustomerTrackingScreen(sdk: FinalEntrySdk, snack: SnackbarHostState)
                                     snack.showSnackbar("Signed off")
                                 }
                                 .onFailure {
-                                    snack.showSnackbar(it.message ?: "Sign-off failed")
+                                    handleSdkFailure(it, snack, onAuthFailure, "Sign-off failed")
                                 }
                         }
 
@@ -368,13 +372,13 @@ private fun CustomerTrackingScreen(sdk: FinalEntrySdk, snack: SnackbarHostState)
 }
 
 @Composable
-private fun CustomerProfile(me: MeResponseDto, onForgetToken: () -> Unit) {
+private fun CustomerProfile(me: MeResponseDto, onAuthFailure: () -> Unit) {
     Column(Modifier.verticalScroll(rememberScrollState())) {
         Text(me.profile?.name ?: "Profile")
         me.profile?.email?.let { Text(it) }
 
-        Button(onClick = onForgetToken, modifier = Modifier.padding(top = 12.dp)) {
-            Text("Clear bearer token")
+        Button(onClick = onAuthFailure, modifier = Modifier.padding(top = 12.dp)) {
+            Text("Logout")
         }
     }
 }

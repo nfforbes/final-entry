@@ -83,7 +83,11 @@ private fun JsonObject.primitive(key: String): String? =
 private fun JsonObject.nested(key: String): JsonObject? = this[key] as? JsonObject
 
 @Composable
-fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
+fun AdminPortal(
+    sdk: FinalEntrySdk,
+    snack: SnackbarHostState,
+    onAuthFailure: () -> Unit,
+) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -136,7 +140,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
     suspend fun reload() {
         sdk.fetchAdminStats()
             .onSuccess { envelope -> stats = envelope.stats }
-            .onFailure { err -> snack.showSnackbar(err.message ?: "Dashboard failed") }
+            .onFailure { err -> snack.handleSdkFailureSuspending(err, onAuthFailure, "Dashboard failed") }
 
         sdk.fetchAdminJobs()
             .onSuccess { envelope ->
@@ -145,11 +149,11 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                         runCatching { element as JsonObject }.getOrNull()
                     }
             }
-            .onFailure { err -> snack.showSnackbar(err.message ?: "Jobs failed") }
+            .onFailure { err -> snack.handleSdkFailureSuspending(err, onAuthFailure, "Jobs failed") }
 
         sdk.fetchAdminUsers(null)
             .onSuccess { envelope -> users = envelope.users }
-            .onFailure { err -> snack.showSnackbar(err.message ?: "Users failed") }
+            .onFailure { err -> snack.handleSdkFailureSuspending(err, onAuthFailure, "Users failed") }
 
         sdk.fetchIntegrationStatus()
             .onSuccess { obj ->
@@ -159,7 +163,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                 googleConnectUrl = urls?.primitive("googleAuth").orEmpty()
                 microsoftConnectUrl = urls?.primitive("microsoftAuth").orEmpty()
             }
-            .onFailure { err -> snack.showSnackbar(err.message ?: "Integrations failed") }
+            .onFailure { err -> snack.handleSdkFailureSuspending(err, onAuthFailure, "Integrations failed") }
     }
 
     LaunchedEffect(Unit) { reload() }
@@ -269,7 +273,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                                     showInviteDialog = false
                                                     reload()
                                                 }
-                                                .onFailure { err -> snack.showSnackbar(err.message ?: "Invite failed") }
+                                                .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Invite failed") }
                                         }
                                     }) { Text("Send") }
                                 },
@@ -379,7 +383,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                                     scope.launch {
                                                         sdk.patchUserRole(uid, "customer")
                                                             .onSuccess { reload() }
-                                                            .onFailure { err -> snack.showSnackbar(err.message ?: "Failed") }
+                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
                                                     }
                                                 }
                                             )
@@ -390,7 +394,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                                     scope.launch {
                                                         sdk.patchUserRole(uid, "technician")
                                                             .onSuccess { reload() }
-                                                            .onFailure { err -> snack.showSnackbar(err.message ?: "Failed") }
+                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
                                                     }
                                                 }
                                             )
@@ -401,7 +405,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                                     scope.launch {
                                                         sdk.patchUserRole(uid, "admin")
                                                             .onSuccess { reload() }
-                                                            .onFailure { err -> snack.showSnackbar(err.message ?: "Failed") }
+                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
                                                     }
                                                 }
                                             )
@@ -412,7 +416,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                                     scope.launch {
                                                         sdk.deleteAdminUser(uid)
                                                             .onSuccess { reload() }
-                                                            .onFailure { err -> snack.showSnackbar(err.message ?: "Failed") }
+                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
                                                     }
                                                 }
                                             )
@@ -495,7 +499,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                                     scope.launch {
                                                         sdk.patchAdminJob(jId, AdminJobPatchBody(status = s))
                                                             .onSuccess { reload() }
-                                                            .onFailure { err -> snack.showSnackbar(err.message ?: "Failed") }
+                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
                                                     }
                                                 })
                                             }
@@ -566,7 +570,7 @@ fun AdminPortal(sdk: FinalEntrySdk, snack: SnackbarHostState) {
                                                     scope.launch {
                                                         sdk.patchAdminJob(jId, AdminJobPatchBody(quotedPrice = tempPrice.toDoubleOrNull()))
                                                             .onSuccess { reload() }
-                                                            .onFailure { err -> snack.showSnackbar(err.message ?: "Failed") }
+                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
                                                     }
                                                 }) { Text("Save") }
                                             },

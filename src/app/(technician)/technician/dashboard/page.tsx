@@ -33,6 +33,9 @@ export default function TechnicianDashboard() {
       setJobs(res.data.jobs || []);
     } catch (err) {
       console.error('Failed to fetch jobs:', err);
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        window.location.href = '/auth/logout?returnTo=/';
+      }
     } finally {
       setLoading(false);
     }
@@ -58,6 +61,9 @@ export default function TechnicianDashboard() {
               });
             } catch (err) {
               console.error('Failed to update location:', err);
+              if (axios.isAxiosError(err) && err.response?.status === 401) {
+                window.location.href = '/auth/logout?returnTo=/';
+              }
             }
           });
         }
