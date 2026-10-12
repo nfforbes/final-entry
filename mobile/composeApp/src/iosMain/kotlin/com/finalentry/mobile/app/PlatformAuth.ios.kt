@@ -22,6 +22,7 @@ import platform.Foundation.NSURL
 import platform.Foundation.NSUserDefaults
 import platform.Foundation.URLQueryAllowedCharacterSet
 import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
+import platform.Foundation.stringByRemovingPercentEncoding
 import platform.UIKit.UIApplication
 import platform.UIKit.UIWindow
 import platform.darwin.NSObject
@@ -54,6 +55,9 @@ actual class PlatformAuth {
 private object IosAuth0 {
     private val json = Json { ignoreUnknownKeys = true }
 
+    /** Must retain until Auth0 redirects back; otherwise the session is cancelled. */
+    private var activeSession: ASWebAuthenticationSession? = null
+
     suspend fun login(): Result<String> {
         val verifier = AuthPkce.randomVerifier()
         val challenge = AuthPkce.s256Challenge(verifier)
@@ -61,18 +65,34 @@ private object IosAuth0 {
 
         val codeResult =
             suspendCancellableCoroutine { cont ->
+                cont.invokeOnCancellation {
+                    activeSession?.cancel()
+                    activeSession = null
+                }
+
                 val session =
                     ASWebAuthenticationSession(
                         NSURL(string = authUrl),
                         "finalentry",
                     ) { callbackUrl, error ->
+                        activeSession = null
                         when {
                             error != null ->
                                 cont.resume(Result.failure(Exception(error.localizedDescription)))
                             callbackUrl == null ->
                                 cont.resume(Result.failure(Exception("Login cancelled")))
                             else -> {
-                                val code = parseQueryParam(callbackUrl.absoluteString ?: "", "code")
+                                val url = callbackUrl.absoluteString ?: ""
+                                parseQueryParam(url, "error")?.let { authError ->
+                                    val desc = parseQueryParam(url, "error_description")
+                                    cont.resume(
+                                        Result.failure(
+                                            Exception(desc ?: authError),
+                                        ),
+                                    )
+                                    return@ASWebAuthenticationSession
+                                }
+                                val code = parseQueryParam(url, "code")
                                 if (code.isNullOrBlank()) {
                                     cont.resume(Result.failure(Exception("Missing authorization code")))
                                 } else {
@@ -82,7 +102,9 @@ private object IosAuth0 {
                         }
                     }
                 session.presentationContextProvider = AuthPresentationContext()
+                activeSession = session
                 if (!session.start()) {
+                    activeSession = null
                     cont.resume(Result.failure(Exception("Could not start Auth0 login session")))
                 }
             }
@@ -147,7 +169,8 @@ private object IosAuth0 {
             val idx = part.indexOf('=')
             if (idx <= 0) continue
             if (part.substring(0, idx) == key) {
-                return part.substring(idx + 1)
+                val raw = part.substring(idx + 1)
+                return (raw as NSString).stringByRemovingPercentEncoding ?: raw
             }
         }
         return null
@@ -167,7 +190,9 @@ private class AuthPresentationContext :
     override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): ASPresentationAnchor {
         val app = UIApplication.sharedApplication
         @Suppress("UNCHECKED_CAST")
-        val window = app.keyWindow ?: app.windows.firstOrNull() as? UIWindow
-        return window ?: ASPresentationAnchor()
+        val windows = app.windows as List<UIWindow>
+        windows.firstOrNull { it.isKeyWindow() }?.let { return it }
+        windows.firstOrNull()?.let { return it }
+        return app.keyWindow ?: ASPresentationAnchor()
     }
 }

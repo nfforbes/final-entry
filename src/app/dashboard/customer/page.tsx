@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { tokens } from '@/lib/theme';
 import Link from 'next/link';
 import { useUser } from '@auth0/nextjs-auth0/client';

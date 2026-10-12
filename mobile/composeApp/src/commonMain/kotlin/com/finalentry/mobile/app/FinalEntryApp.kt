@@ -43,6 +43,7 @@ fun FinalEntryApp() {
 
     var me by remember { mutableStateOf<MeResponseDto?>(null) }
     var loadErr by remember { mutableStateOf<String?>(null) }
+    var loadingMe by remember { mutableStateOf(false) }
 
     fun forceLogout() {
         auth.logout()
@@ -55,8 +56,10 @@ fun FinalEntryApp() {
         loadErr = null
         if (bearer.trim().isEmpty()) {
             me = null
+            loadingMe = false
             return
         }
+        loadingMe = true
         sdk.fetchMe().fold(
             onSuccess = {
                 me = it
@@ -68,53 +71,18 @@ fun FinalEntryApp() {
                     scope.launch { snack.showSnackbar("Session expired. Please log in again.") }
                 } else {
                     me = null
-                    loadErr = it.message ?: "Unauthorized"
+                    loadErr = it.message ?: "Could not load profile"
                 }
             },
         )
+        loadingMe = false
     }
 
     LaunchedEffect(bearer) { loadMe() }
 
     Scaffold(snackbarHost = { SnackbarHost(snack) }) { inset ->
-        if (me == null) {
-            Column(
-                modifier =
-                    Modifier
-                        .padding(inset)
-                        .fillMaxSize()
-                        .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text("Final Entry", style = MaterialTheme.typography.headlineLarge)
-                loadErr?.let {
-                    Text(
-                        it,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(top = 12.dp),
-                    )
-                }
-                Button(
-                    onClick = {
-                        scope.launch {
-                            auth.login()
-                                .onSuccess { token ->
-                                    bearer = token
-                                    auth.saveBearerToken(token)
-                                    loadErr = null
-                                }
-                                .onFailure { err ->
-                                    loadErr = err.message ?: "Login failed"
-                                }
-                        }
-                    },
-                    modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
-                ) {
-                    Text("Login with Auth0")
-                }
-            }
-        } else {
+        when {
+            me != null -> {
             val role = (me?.role ?: me?.profile?.role)?.trim()?.lowercase().orEmpty()
             Column(
                 modifier =
@@ -141,6 +109,88 @@ fun FinalEntryApp() {
                     modifier = Modifier.padding(top = 16.dp),
                 ) {
                     Text("Logout")
+                }
+            }
+            }
+
+            bearer.trim().isNotEmpty() -> {
+                Column(
+                    modifier =
+                        Modifier
+                            .padding(inset)
+                            .fillMaxSize()
+                            .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text("Final Entry", style = MaterialTheme.typography.headlineLarge)
+                    Text(
+                        if (loadingMe) "Signing you in…" else "Loading your profile…",
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                    loadErr?.let {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
+                    }
+                    Button(
+                        onClick = { scope.launch { loadMe() } },
+                        modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
+                    ) {
+                        Text(if (loadErr != null) "Retry" else "Continue")
+                    }
+                    if (loadErr != null) {
+                        Button(
+                            onClick = {
+                                forceLogout()
+                                scope.launch { snack.showSnackbar("Logged out") }
+                            },
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) {
+                            Text("Back to login")
+                        }
+                    }
+                }
+            }
+
+            else -> {
+                Column(
+                    modifier =
+                        Modifier
+                            .padding(inset)
+                            .fillMaxSize()
+                            .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text("Final Entry", style = MaterialTheme.typography.headlineLarge)
+                    loadErr?.let {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                auth.login()
+                                    .onSuccess { token ->
+                                        bearer = token
+                                        auth.saveBearerToken(token)
+                                        loadErr = null
+                                    }
+                                    .onFailure { err ->
+                                        loadErr = err.message ?: "Login failed"
+                                    }
+                            }
+                        },
+                        modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
+                    ) {
+                        Text("Login with Auth0")
+                    }
                 }
             }
         }

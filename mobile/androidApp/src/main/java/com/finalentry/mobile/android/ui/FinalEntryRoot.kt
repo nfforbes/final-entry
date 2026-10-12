@@ -87,9 +87,10 @@ fun FinalEntryRoot() {
         authManager.logout()
     }
 
-    val onAuthFailure = {
+    val onAuthFailure: () -> Unit = {
         forceLogout()
         scope.launch { snack.showSnackbar("Session expired. Please log in again.") }
+        Unit
     }
 
     suspend fun loadMe() {
