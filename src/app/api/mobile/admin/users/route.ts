@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
 
-    const filter: Record<string, string> = {};
-    if (role) filter.role = role;
+    const filter: Record<string, unknown> = {};
+    if (role) filter.$or = [{ role }, { roles: role }];
 
     const users = await Customer.find(filter).sort({ createdAt: -1 });
     return NextResponse.json({ users });

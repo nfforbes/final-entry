@@ -1,4 +1,5 @@
 import mongoose, { Schema, model, models, Document } from 'mongoose';
+import { APP_ROLES, type AppRole } from '@/lib/roles';
 
 export const JAMAICAN_PARISHES = [
   'Kingston',
@@ -26,7 +27,8 @@ export interface ICustomer extends Document {
   phone?: string;
   address?: string;
   parish?: JamaicanParish;
-  role: 'customer' | 'admin' | 'technician';
+  role: AppRole;
+  roles?: AppRole[];
   quoteHistory: mongoose.Types.ObjectId[];
   preferredTheme: 'dark' | 'light';
   currentLocation?: {
@@ -54,7 +56,8 @@ const CustomerSchema = new Schema<ICustomer>(
     phone: { type: String },
     address: { type: String },
     parish: { type: String, enum: JAMAICAN_PARISHES },
-    role: { type: String, enum: ['customer', 'admin', 'technician'], default: 'customer' },
+    role: { type: String, enum: APP_ROLES, default: 'customer' },
+    roles: { type: [{ type: String, enum: APP_ROLES }], default: undefined },
     quoteHistory: [{ type: Schema.Types.ObjectId, ref: 'Job' }],
     preferredTheme: { type: String, enum: ['dark', 'light'], default: 'dark' },
     currentLocation: {

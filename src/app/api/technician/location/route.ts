@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth0 } from '@/lib/auth0';
 import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
+import { hasRole } from '@/lib/roles';
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
 
     // Check role in DB
     const user = await Customer.findOne({ email: session.user.email });
-    if (!user || (user.role !== 'technician' && user.role !== 'admin')) {
+    if (!user || (!hasRole(user, 'technician') && !hasRole(user, 'admin'))) {
       return NextResponse.json({ error: 'Forbidden. Technician access required.' }, { status: 403 });
     }
 

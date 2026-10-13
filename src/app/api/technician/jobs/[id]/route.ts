@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import { Job } from '@/models/Job';
 import { Customer } from '@/models/Customer';
 import { auth0 } from '@/lib/auth0';
+import { hasRole } from '@/lib/roles';
 
 export async function GET(
   request: NextRequest,
@@ -19,7 +20,7 @@ export async function GET(
 
     // Find technician user
     const user = await Customer.findOne({ auth0Id: session.user.sub });
-    if (!user || user.role !== 'technician') {
+    if (!user || !hasRole(user, 'technician')) {
       return NextResponse.json({ error: 'Forbidden. Technician access required.' }, { status: 403 });
     }
 
@@ -64,7 +65,7 @@ export async function PATCH(
 
     // Find technician user
     const user = await Customer.findOne({ auth0Id: session.user.sub });
-    if (!user || user.role !== 'technician') {
+    if (!user || !hasRole(user, 'technician')) {
       return NextResponse.json({ error: 'Forbidden. Technician access required.' }, { status: 403 });
     }
 

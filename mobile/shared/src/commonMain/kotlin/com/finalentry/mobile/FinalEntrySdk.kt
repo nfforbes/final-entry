@@ -28,9 +28,12 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.content.TextContent
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -52,6 +55,9 @@ class FinalEntrySdk(private val config: SdkConfig) {
         HttpClient(createHttpEngine()) {
             install(ContentNegotiation) { json(fmt) }
         }
+
+    private inline fun <reified T> encodedJson(value: T): TextContent =
+        TextContent(fmt.encodeToString(value), ContentType.Application.Json)
 
     private suspend fun HttpRequestBuilder.applyBearerAuth() {
         val tok = config.bearer() ?: return
@@ -104,7 +110,7 @@ class FinalEntrySdk(private val config: SdkConfig) {
         val resp =
             client.post("$base/api/mobile/customer/jobs") {
                 applyBearerAuth()
-                setBody(body)
+                setBody(encodedJson(body))
             }
         val text = resp.bodyAsText()
         ensureSuccess(resp, text)
@@ -129,7 +135,7 @@ class FinalEntrySdk(private val config: SdkConfig) {
             val resp =
                 client.patch("$base/api/mobile/technician/jobs/$id") {
                     applyBearerAuth()
-                    setBody(patch)
+                    setBody(encodedJson(patch))
                 }
             val text = resp.bodyAsText()
             ensureSuccess(resp, text)
@@ -143,7 +149,7 @@ class FinalEntrySdk(private val config: SdkConfig) {
             val resp =
                 client.post("$base/api/mobile/technician/location") {
                     applyBearerAuth()
-                    setBody(LocationPostDto(lat, lng, isSharing))
+                    setBody(encodedJson(LocationPostDto(lat, lng, isSharing)))
                 }
             val text = resp.bodyAsText()
             ensureSuccess(resp, text)
@@ -176,7 +182,7 @@ class FinalEntrySdk(private val config: SdkConfig) {
             val resp =
                 client.patch("$base/api/mobile/admin/jobs/$id") {
                     applyBearerAuth()
-                    setBody(patch)
+                    setBody(encodedJson(patch))
                 }
             val text = resp.bodyAsText()
             ensureSuccess(resp, text)
@@ -200,17 +206,17 @@ class FinalEntrySdk(private val config: SdkConfig) {
         val resp =
             client.post("$base/api/mobile/admin/users/invite") {
                 applyBearerAuth()
-                setBody(InviteRequestDto(email, role))
+                setBody(encodedJson(InviteRequestDto(email, role)))
             }
         val text = resp.bodyAsText()
         ensureSuccess(resp, text)
     }
 
-    suspend fun patchUserRole(userId: String, role: String): Result<Unit> = runCatching {
+    suspend fun patchUserRoles(userId: String, roles: List<String>): Result<Unit> = runCatching {
         val resp =
             client.patch("$base/api/mobile/admin/users/$userId") {
                 applyBearerAuth()
-                setBody(PatchRoleDto(role))
+                setBody(encodedJson(PatchRoleDto(roles)))
             }
         val text = resp.bodyAsText()
         ensureSuccess(resp, text)
@@ -248,7 +254,7 @@ class FinalEntrySdk(private val config: SdkConfig) {
     ): Result<String> =
         runCatching {
             val resp =
-                client.patch("$base/api/tracking/${token.trim()}") { setBody(payload) }
+                client.patch("$base/api/tracking/${token.trim()}") { setBody(encodedJson(payload)) }
             val text = resp.bodyAsText()
             ensureSuccess(resp, text)
             val obj = fmt.parseToJsonElement(text).jsonObject

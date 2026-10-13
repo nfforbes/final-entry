@@ -1,27 +1,28 @@
 package com.finalentry.mobile.android.ui
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Timeline
-import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,9 +45,7 @@ import com.finalentry.mobile.FinalEntrySdk
 import com.finalentry.mobile.model.CreateCustomerJobRequest
 import com.finalentry.mobile.model.MeResponseDto
 import com.finalentry.mobile.model.ServiceLiteDto
-import com.finalentry.mobile.model.TrackingPatchDto
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
 
 @Composable
 fun CustomerPortal(
@@ -73,20 +73,13 @@ fun CustomerPortal(
                 NavigationBarItem(
                     selected = tab == 2,
                     onClick = { tab = 2 },
-                    icon = { Icon(Icons.Default.TravelExplore, null) },
-                    label = { Text("Track") },
-                )
-                NavigationBarItem(
-                    selected = tab == 3,
-                    onClick = { tab = 3 },
                     icon = { Icon(Icons.Default.Person, null) },
                     label = { Text("Me") },
                 )
-                val role = (me.role ?: me.profile?.role)?.lowercase()
-                if (role == "admin") {
+                if ("admin" in me.roleSet()) {
                     NavigationBarItem(
-                        selected = tab == 4,
-                        onClick = { tab = 4 },
+                        selected = tab == 3,
+                        onClick = { tab = 3 },
                         icon = { Icon(Icons.Default.AdminPanelSettings, null) },
                         label = { Text("Admin") },
                     )
@@ -98,12 +91,87 @@ fun CustomerPortal(
             when (tab) {
                 0 -> CustomerBookingScreen(sdk, me, snack, onAuthFailure)
                 1 -> CustomerOrdersScreen(sdk, snack, onAuthFailure)
-                2 -> CustomerTrackingScreen(sdk, snack, onAuthFailure)
-                3 -> CustomerProfile(me, onAuthFailure)
-                4 -> AdminPortal(sdk, snack, onAuthFailure)
+                2 -> CustomerProfile(me, onAuthFailure)
+                3 -> AdminPortal(sdk, snack, onAuthFailure)
                 else -> CustomerProfile(me, onAuthFailure)
             }
         }
+    }
+}
+
+private val JamaicanParishes =
+    listOf(
+        "Kingston",
+        "Saint Andrew",
+        "Saint Thomas",
+        "Portland",
+        "Saint Mary",
+        "Saint Ann",
+        "Trelawny",
+        "Saint James",
+        "Hanover",
+        "Westmoreland",
+        "Saint Elizabeth",
+        "Manchester",
+        "Clarendon",
+        "Saint Catherine",
+    )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DropdownField(
+    label: String,
+    value: String,
+    options: List<String>,
+    onSelect: (String) -> Unit,
+    enabled: Boolean = true,
+    placeholder: String = "",
+) {
+    var open by remember { mutableStateOf(false) }
+    val canOpen = enabled && options.isNotEmpty()
+    Box(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            enabled = enabled,
+            label = { Text(label) },
+            placeholder = { if (placeholder.isNotBlank()) Text(placeholder) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = open) },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Box(
+            Modifier
+                .matchParentSize()
+                .clickable(enabled = canOpen) { open = true },
+        )
+    }
+    if (open) {
+        AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text(label) },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    options.forEach { option ->
+                        Text(
+                            option,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onSelect(option)
+                                        open = false
+                                    }
+                                    .padding(vertical = 12.dp),
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { open = false }) { Text("Close") }
+            },
+        )
     }
 }
 
@@ -117,12 +185,16 @@ private fun CustomerBookingScreen(
     val scope = rememberCoroutineScope()
     var services by remember { mutableStateOf<List<ServiceLiteDto>>(emptyList()) }
     var selected by remember { mutableStateOf<ServiceLiteDto?>(null) }
-    var parish by remember { mutableStateOf("Saint Andrew") }
+    var parish by remember {
+        mutableStateOf(me.profile?.parish?.takeIf { it in JamaicanParishes } ?: "Saint Andrew")
+    }
     var address by remember { mutableStateOf("") }
     var pest by remember { mutableStateOf("") }
     var urgency by remember { mutableStateOf("medium") }
     var phone by remember { mutableStateOf(me.profile?.phone.orEmpty()) }
     var banner by remember { mutableStateOf<String?>(null) }
+    var bannerIsError by remember { mutableStateOf(true) }
+    var sending by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         sdk.fetchServices()
@@ -135,21 +207,23 @@ private fun CustomerBookingScreen(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
     ) {
-        Text("Pick a catalog service", style = MaterialTheme.typography.titleMedium)
-        services.forEach { svc ->
-            ListItem(
-                headlineContent = { Text(svc.title ?: svc.slug.orEmpty()) },
-                supportingContent = { svc.slug?.let { slug -> Text("slug: $slug") } },
-                modifier =
-                    Modifier.clickable {
-                        selected = svc
-                        banner = null
-                    },
-            )
-            HorizontalDivider()
-        }
-
-        OutlinedTextField(parish, { parish = it }, Modifier.fillMaxWidth(), label = { Text("Parish") })
+        DropdownField(
+            label = "Catalog service",
+            value = selected?.title ?: selected?.slug.orEmpty(),
+            options = services.map { it.title ?: it.slug.orEmpty() }.filter { it.isNotBlank() },
+            enabled = services.isNotEmpty(),
+            placeholder = if (services.isEmpty()) "Loading catalog…" else "Select a service",
+            onSelect = { label ->
+                selected = services.firstOrNull { (it.title ?: it.slug.orEmpty()) == label }
+                banner = null
+            },
+        )
+        DropdownField(
+            label = "Parish",
+            value = parish,
+            options = JamaicanParishes,
+            onSelect = { parish = it },
+        )
         OutlinedTextField(address, { address = it }, Modifier.fillMaxWidth(), label = { Text("Address") })
         OutlinedTextField(pest, { pest = it }, Modifier.fillMaxWidth(), label = { Text("Pest / concern") }, maxLines = 5)
         OutlinedTextField(phone, { phone = it }, Modifier.fillMaxWidth(), label = { Text("Phone") })
@@ -166,49 +240,70 @@ private fun CustomerBookingScreen(
         }
 
         Button(
-            enabled = selected != null && address.isNotBlank() && pest.isNotBlank() && phone.isNotBlank(),
+            enabled = !sending,
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
             onClick = {
-                val svcSlug = selected?.slug ?: selected?._id?.takeIf { it.isNotBlank() }
+                val missing = buildList {
+                    if (selected == null) add("a service")
+                    if (address.isBlank()) add("an address")
+                    if (pest.isBlank()) add("the pest concern")
+                    if (phone.isBlank()) add("a phone number")
+                }
+                if (missing.isNotEmpty()) {
+                    bannerIsError = true
+                    banner = "Add ${missing.joinToString(", ")} before sending."
+                    return@Button
+                }
+                val svcSlug = selected?.slug?.takeIf { it.isNotBlank() }
+                    ?: selected?._id?.takeIf { it.isNotBlank() }
                 if (svcSlug == null) {
-                    banner = "Select a service from the catalog list."
+                    bannerIsError = true
+                    banner = "Select a catalog service."
                     return@Button
                 }
                 val mail = me.profile?.email.orEmpty().ifBlank { null }
                 if (mail == null) {
-                    banner =
-                        "Use token with openid profile email so /api/mobile/me includes your email."
+                    bannerIsError = true
+                    banner = "Your account has no email, so this request cannot be sent."
                     return@Button
                 }
 
                 scope.launch {
+                    sending = true
                     sdk
                         .createCustomerJob(
                             CreateCustomerJobRequest(
                                 serviceId = svcSlug,
                                 parish = parish,
-                                address = address,
-                                pestDescription = pest,
+                                address = address.trim(),
+                                pestDescription = pest.trim(),
                                 urgency = urgency,
-                                contactName = me.profile?.name ?: "Customer",
+                                contactName = me.profile?.name?.takeIf { it.isNotBlank() } ?: "Customer",
                                 contactEmail = mail,
-                                contactPhone = phone,
+                                contactPhone = phone.trim(),
                             ),
                         )
                         .onSuccess {
-                            banner = "Created RFQ " + (it.status ?: "") + " id=" + it.id
-                            snack.showSnackbar("RFQ created")
+                            bannerIsError = false
+                            banner = "Request sent. A technician will contact you to confirm."
+                            address = ""
+                            pest = ""
+                            selected = null
+                            snack.showSnackbar("Request sent")
 
                         }
 
 
 
                         .onFailure {
+                            Log.e("FinalEntry", "booking failed", it)
+                            bannerIsError = true
                             handleSdkFailureOrBanner(it, onAuthFailure) { banner = it }
                         }
+                    sending = false
 
 
 
@@ -220,16 +315,28 @@ private fun CustomerBookingScreen(
 
         ) {
 
-            Text("Submit")
+            Text(if (sending) "Sending…" else "Submit")
 
 
         }
 
 
+
+        if (banner == null && (selected == null || address.isBlank() || pest.isBlank() || phone.isBlank())) {
+            Text(
+                "Choose a service, then add an address, the pest concern, and a phone number.",
+                Modifier.padding(top = 8.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         banner?.let {
 
-            Text(it, Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.error)
+            Text(
+                it,
+                Modifier.padding(top = 8.dp),
+                color = if (bannerIsError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            )
 
         }
 
@@ -241,135 +348,6 @@ private fun CustomerBookingScreen(
 
 }
 
-
-@Composable
-private fun CustomerOrdersScreen(
-    sdk: FinalEntrySdk,
-    snack: SnackbarHostState,
-    onAuthFailure: () -> Unit,
-) {
-    val scope = rememberCoroutineScope()
-    var items by remember { mutableStateOf<List<JsonObject>>(emptyList()) }
-
-    LaunchedEffect(Unit) {
-        sdk.fetchCustomerJobs()
-            .onSuccess {
-                items =
-                    it.jobs.mapNotNull { el ->
-                        kotlin.runCatching { el as JsonObject }.getOrNull()
-                    }
-            }
-            .onFailure {
-                handleSdkFailure(it, snack, onAuthFailure, "Failed to load orders")
-            }
-    }
-
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        itemsIndexed(items) { _, jo ->
-            Column {
-                Text(jo.mongoId() + " · " + jo.optText("status"))
-                Text(jo.optText("address"))
-            }
-            HorizontalDivider()
-        }
-    }
-}
-
-@Composable
-private fun CustomerTrackingScreen(
-    sdk: FinalEntrySdk,
-    snack: SnackbarHostState,
-    onAuthFailure: () -> Unit,
-) {
-    val scope = rememberCoroutineScope()
-    var token by remember { mutableStateOf("") }
-    var job by remember { mutableStateOf<JsonObject?>(null) }
-    var name by remember { mutableStateOf("") }
-    var signature by remember { mutableStateOf("") }
-
-    Column(Modifier.verticalScroll(rememberScrollState())) {
-        OutlinedTextField(
-            token,
-            { token = it },
-            Modifier.fillMaxWidth(),
-            label = { Text("Tracking token") },
-        )
-
-        Button(
-            onClick = {
-                scope.launch {
-                    sdk.trackingSnapshot(token)
-                        .onSuccess { root ->
-                            job =
-                                kotlin.runCatching {
-                                    root["job"]!!.let { e -> e as JsonObject }
-                                }.getOrNull()
-                        }
-                        .onFailure {
-                            handleSdkFailure(it, snack, onAuthFailure, "Tracking failed")
-                        }
-                }
-            },
-
-            modifier = Modifier.padding(top = 8.dp),
-            enabled = token.isNotBlank(),
-        ) {
-            Text("Refresh")
-        }
-
-        job?.let { jobj ->
-            HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            Text(jobj.toString())
-
-            val stat = jobj.optText("status")
-            if (stat.equals("completed", ignoreCase = true)) {
-                OutlinedTextField(
-                    name,
-                    { name = it },
-                    Modifier.fillMaxWidth(),
-                    label = {
-                        Text("Printed name")
-                    },
-                )
-
-                OutlinedTextField(
-                    signature,
-                    { signature = it },
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    label = { Text("Signature PNG base64") },
-                )
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            sdk.submitTrackingSignature(
-                                token.trim(),
-                                TrackingPatchDto(
-                                    signedOffBy = name.takeIf { it.isNotBlank() },
-                                    signatureImage = signature,
-                                ),
-                            )
-                                .onSuccess {
-                                    snack.showSnackbar("Signed off")
-                                }
-                                .onFailure {
-                                    handleSdkFailure(it, snack, onAuthFailure, "Sign-off failed")
-                                }
-                        }
-
-                    },
-
-                    modifier = Modifier.padding(top = 8.dp),
-                    enabled = signature.isNotBlank(),
-                ) {
-                    Text("Sign-off")
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun CustomerProfile(me: MeResponseDto, onAuthFailure: () -> Unit) {

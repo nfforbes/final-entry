@@ -204,7 +204,17 @@ fun FinalEntryRoot() {
                     .padding(inset)
                     .fillMaxSize(),
             ) {
-                val role = (me?.role ?: me?.profile?.role)?.trim()?.lowercase().orEmpty()
+                val roles = me?.roleSet().orEmpty()
+                var portal by remember(roles) {
+                    mutableStateOf(
+                        when {
+                            "admin" in roles -> "admin"
+                            "technician" in roles -> "technician"
+                            "customer" in roles -> "customer"
+                            else -> ""
+                        },
+                    )
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
@@ -215,8 +225,8 @@ fun FinalEntryRoot() {
                         Text("Final Entry", style = MaterialTheme.typography.headlineSmall)
                         Text(
                             text = when {
-                                role.isEmpty() -> "Role unknown."
-                                else -> "Logged in • $role"
+                                roles.isEmpty() -> "Role unknown."
+                                else -> "Logged in • ${roles.roleLabel()}"
                             },
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -241,6 +251,15 @@ fun FinalEntryRoot() {
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
+                            AppRoles.filter { it in roles && it != portal }.forEach { target ->
+                                DropdownMenuItem(
+                                    text = { Text("Switch to ${target.replaceFirstChar { it.uppercase() }}") },
+                                    onClick = {
+                                        expanded = false
+                                        portal = target
+                                    },
+                                )
+                            }
                             DropdownMenuItem(
                                 text = { Text("Logout") },
                                 onClick = {
@@ -256,7 +275,7 @@ fun FinalEntryRoot() {
                 loadErr?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp)) }
 
                 Box(modifier = Modifier.weight(1f)) {
-                    when (role) {
+                    when (portal) {
                         "customer" ->
                             CustomerPortal(
                                 sdk = sdk,
@@ -267,7 +286,7 @@ fun FinalEntryRoot() {
 
                         "admin" -> AdminPortal(sdk = sdk, snack = snack, onAuthFailure = onAuthFailure)
                         "technician" -> TechnicianPortal(sdk = sdk, snack = snack, onAuthFailure = onAuthFailure)
-                        else -> Text("Role \"$role\" is not routed. Complete an invite or login once on web.", modifier = Modifier.padding(16.dp))
+                        else -> Text("This account has no role yet. Complete an invite or login once on the web.", modifier = Modifier.padding(16.dp))
                     }
                 }
             }

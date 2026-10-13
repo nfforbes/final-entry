@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { auth0 } from '@/lib/auth0';
 import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
+import { hasRole } from '@/lib/roles';
 import { AdminClientLayout } from '@/components/admin/AdminClientLayout';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     await connectDB();
     const user = await Customer.findOne({ auth0Id: session.user.sub });
 
-    if (!user || user.role !== 'admin') {
+    if (!user || !hasRole(user, 'admin')) {
       console.warn(`[AdminGuard] Unauthorized access attempt by ${session.user.email} (Role: ${user?.role || 'none'})`);
       redirect('/');
     }

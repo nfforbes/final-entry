@@ -5,6 +5,7 @@ import {
   resolveMobileActor,
   requireRoles,
 } from '@/lib/mobileRequestContext';
+import { primaryRole, rolesFromUpdate } from '@/lib/roles';
 
 export async function PATCH(
   request: NextRequest,
@@ -21,11 +22,15 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    const roles = rolesFromUpdate(body);
+    if (!roles) {
+      return NextResponse.json({ error: 'Choose at least one role' }, { status: 400 });
+    }
 
     await connectDB();
     const user = await Customer.findByIdAndUpdate(
       id,
-      { role: body.role },
+      { roles, role: primaryRole(roles) },
       { new: true }
     );
 

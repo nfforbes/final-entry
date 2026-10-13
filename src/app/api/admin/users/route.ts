@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
 import { auth0 } from '@/lib/auth0';
+import { hasRole } from '@/lib/roles';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,15 +15,15 @@ export async function GET(request: NextRequest) {
     
     // Direct DB role check for consistency with portal security
     const currentUser = await Customer.findOne({ auth0Id: session.user.sub });
-    if (!currentUser || currentUser.role !== 'admin') {
+    if (!currentUser || !hasRole(currentUser, 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
 
-    const filter: any = {};
-    if (role) filter.role = role;
+    const filter: Record<string, unknown> = {};
+    if (role) filter.$or = [{ role }, { roles: role }];
 
     const users = await Customer.find(filter).sort({ createdAt: -1 });
     return NextResponse.json({ users });

@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
 import { Invitation } from '@/models/Invitation';
+import { primaryRole, rolesOf, type AppRole } from '@/lib/roles';
 
 export type Auth0SyncInput = {
   sub: string;
@@ -16,6 +17,7 @@ export async function upsertCustomerFromAuth0Profile(user: Auth0SyncInput): Prom
   _id: unknown;
   email: string;
   role: string;
+  roles: AppRole[];
   auth0Id: string;
   name: string;
 }> {
@@ -40,20 +42,21 @@ export async function upsertCustomerFromAuth0Profile(user: Auth0SyncInput): Prom
     status: 'pending',
   });
 
-  const targetRole = (
-    invitation
-      ? invitation.role
-      : existingUser
-        ? existingUser.role
-        : 'customer'
-  ).toLowerCase();
+  const next = invitation
+    ? rolesOf({
+        roles: existingUser ? [...rolesOf(existingUser), invitation.role] : [invitation.role],
+      })
+    : existingUser
+      ? rolesOf(existingUser)
+      : (['customer'] as AppRole[]);
 
   const displayName =
     user.name || user.nickname || user.email.split('@')[0];
 
   let updatedUser;
   if (existingUser) {
-    existingUser.role = targetRole as 'customer' | 'admin' | 'technician';
+    existingUser.roles = next;
+    existingUser.role = primaryRole(next);
     if (user.name && !existingUser.name) {
       existingUser.name = user.name;
     }
@@ -63,7 +66,8 @@ export async function upsertCustomerFromAuth0Profile(user: Auth0SyncInput): Prom
       auth0Id: user.sub,
       email: user.email,
       name: displayName,
-      role: targetRole as 'customer' | 'admin' | 'technician',
+      roles: next,
+      role: primaryRole(next),
       preferredTheme: 'dark',
       createdAt: new Date(),
     });
@@ -78,6 +82,7 @@ export async function upsertCustomerFromAuth0Profile(user: Auth0SyncInput): Prom
     _id: plain._id,
     email: plain.email,
     role: plain.role,
+    roles: rolesOf(plain),
     auth0Id: plain.auth0Id,
     name: plain.name,
   };

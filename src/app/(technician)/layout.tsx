@@ -5,6 +5,7 @@ import { Logout as LogoutIcon, Dashboard as DashIcon, Person as UserIcon } from 
 import { auth0 } from '@/lib/auth0';
 import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
+import { hasRole } from '@/lib/roles';
 
 const tokens = {
   obsidian: '#0b0b0f',
@@ -25,7 +26,7 @@ export default async function TechnicianLayout({ children }: { children: React.R
     await connectDB();
     const user = await Customer.findOne({ auth0Id: session.user.sub });
 
-    if (!user || user.role !== 'technician') {
+    if (!user || !hasRole(user, 'technician')) {
       redirect('/auth/logout?returnTo=/');
     }
   } catch (error) {

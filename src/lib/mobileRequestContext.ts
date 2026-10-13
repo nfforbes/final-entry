@@ -10,6 +10,7 @@ import {
   verifyAuth0BearerToken,
 } from '@/lib/mobileAuth';
 import { upsertCustomerFromAuth0Profile } from '@/lib/auth0SyncUser';
+import { hasRole, type AppRole } from '@/lib/roles';
 
 export type MobileActor = {
   customer: HydratedDocument<ICustomer>;
@@ -85,7 +86,7 @@ export async function resolveMobileActor(
 
 export function requireRoles(
   actor: MobileActor,
-  roles: Array<ICustomer['role']>
+  roles: readonly AppRole[]
 ): boolean {
-  return roles.includes(actor.customer.role as ICustomer['role']);
+  return roles.some((role) => hasRole(actor.customer, role));
 }

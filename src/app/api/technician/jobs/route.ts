@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import { Job } from '@/models/Job';
 import { Customer } from '@/models/Customer';
 import { auth0 } from '@/lib/auth0';
+import { hasRole } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // Find the technician user in our DB
     const user = await Customer.findOne({ auth0Id: session.user.sub });
-    if (!user || user.role !== 'technician') {
+    if (!user || !hasRole(user, 'technician')) {
       return NextResponse.json({ error: 'Forbidden. Technician access required.' }, { status: 403 });
     }
 

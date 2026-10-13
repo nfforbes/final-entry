@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import { Customer } from '@/models/Customer';
 
 import { auth0 } from '@/lib/auth0';
+import { hasRole, primaryRole, rolesFromUpdate } from '@/lib/roles';
 
 export async function PATCH(
   request: NextRequest,
@@ -20,13 +21,18 @@ export async function PATCH(
 
     // Direct DB role check
     const currentUser = await Customer.findOne({ auth0Id: session.user.sub });
-    if (!currentUser || currentUser.role !== 'admin') {
+    if (!currentUser || !hasRole(currentUser, 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const roles = rolesFromUpdate(body);
+    if (!roles) {
+      return NextResponse.json({ error: 'Choose at least one role' }, { status: 400 });
     }
 
     const user = await Customer.findByIdAndUpdate(
       id,
-      { role: body.role },
+      { roles, role: primaryRole(roles) },
       { new: true }
     );
 
@@ -55,7 +61,7 @@ export async function DELETE(
 
     // Direct DB role check
     const currentUser = await Customer.findOne({ auth0Id: session.user.sub });
-    if (!currentUser || currentUser.role !== 'admin') {
+    if (!currentUser || !hasRole(currentUser, 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

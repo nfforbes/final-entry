@@ -12,12 +12,17 @@ data class UserProfileDto(
     val email: String? = null,
     val phone: String? = null,
     val role: String? = null,
+    val roles: List<String> = emptyList(),
     val parish: String? = null,
     val address: String? = null,
 )
 
 @Serializable
-data class MeResponseDto(val profile: UserProfileDto? = null, val role: String? = null)
+data class MeResponseDto(
+    val profile: UserProfileDto? = null,
+    val role: String? = null,
+    val roles: List<String> = emptyList(),
+)
 
 @Serializable
 data class NamedRefDto(val name: String? = null)
@@ -92,7 +97,7 @@ data class AttachmentWireDto(
 )
 
 @Serializable
-data class PatchRoleDto(val role: String)
+data class PatchRoleDto(val roles: List<String>)
 
 @Serializable
 data class JobWireDto(

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -59,20 +60,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.finalentry.mobile.FinalEntrySdk
-import com.finalentry.mobile.model.AdminJobPatchBody
 import com.finalentry.mobile.model.DashboardStatWireDto
 import com.finalentry.mobile.model.UserProfileDto
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-
-private val prettyJson =
-    Json {
-        prettyPrint = true
-        ignoreUnknownKeys = true
-    }
 
 private fun JsonObject.primitive(key: String): String? =
     when (val v = this[key]) {
@@ -95,17 +87,19 @@ fun AdminPortal(
     var jobs by remember { mutableStateOf<List<JsonObject>>(emptyList()) }
     var users by remember { mutableStateOf<List<UserProfileDto>>(emptyList()) }
     var integrations by remember { mutableStateOf<JsonObject?>(null) }
-    var integrationPretty by remember { mutableStateOf("") }
     var googleConnectUrl by remember { mutableStateOf("") }
     var microsoftConnectUrl by remember { mutableStateOf("") }
 
     var inviteEmail by remember { mutableStateOf("") }
     var inviteRole by remember { mutableStateOf("technician") }
     var showInviteDialog by remember { mutableStateOf(false) }
+    var roleEditor by remember { mutableStateOf<UserProfileDto?>(null) }
+    var draftRoles by remember { mutableStateOf(setOf<String>()) }
     var userSearchQuery by remember { mutableStateOf("") }
     var userRoleFilter by remember { mutableStateOf("All") }
     var orderSearchQuery by remember { mutableStateOf("") }
     var orderStatusFilter by remember { mutableStateOf("All") }
+    var openOrderId by remember { mutableStateOf<String?>(null) }
     
     var msTenantId by remember { mutableStateOf("") }
     var msClientId by remember { mutableStateOf("") }
@@ -158,7 +152,6 @@ fun AdminPortal(
         sdk.fetchIntegrationStatus()
             .onSuccess { obj ->
                 integrations = obj
-                integrationPretty = runCatching { prettyJson.encodeToString(obj) }.getOrElse { "{}" }
                 val urls = obj.nested("connectUrls")
                 googleConnectUrl = urls?.primitive("googleAuth").orEmpty()
                 microsoftConnectUrl = urls?.primitive("microsoftAuth").orEmpty()
@@ -236,6 +229,51 @@ fun AdminPortal(
                         }
                     }
                     "Users" -> {
+                        roleEditor?.let { editing ->
+                            AlertDialog(
+                                onDismissRequest = { roleEditor = null },
+                                title = { Text("Roles for ${editing.name ?: editing.email ?: "user"}") },
+                                text = {
+                                    Column {
+                                        AppRoles.forEach { role ->
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Checkbox(
+                                                    checked = role in draftRoles,
+                                                    onCheckedChange = { checked ->
+                                                        draftRoles =
+                                                            if (checked) draftRoles + role else draftRoles - role
+                                                    },
+                                                )
+                                                Text(role.replaceFirstChar { it.uppercase() })
+                                            }
+                                        }
+                                    }
+                                },
+                                confirmButton = {
+                                    Button(
+                                        enabled = draftRoles.isNotEmpty(),
+                                        onClick = {
+                                            val uid = editing.id.orEmpty().ifBlank { editing.auth0Id.orEmpty() }
+                                            val next = AppRoles.filter { it in draftRoles }
+                                            roleEditor = null
+                                            scope.launch {
+                                                sdk.patchUserRoles(uid, next)
+                                                    .onSuccess {
+                                                        snack.showSnackbar("Roles updated")
+                                                        reload()
+                                                    }
+                                                    .onFailure { err ->
+                                                        handleSdkFailure(err, snack, onAuthFailure, "Failed to update roles")
+                                                    }
+                                            }
+                                        },
+                                    ) { Text("Save") }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { roleEditor = null }) { Text("Cancel") }
+                                },
+                            )
+                        }
                         if (showInviteDialog) {
                             AlertDialog(
                                 onDismissRequest = { showInviteDialog = false },
@@ -325,7 +363,7 @@ fun AdminPortal(
                             val matchesSearch = userSearchQuery.isBlank() || 
                                 u.name?.contains(userSearchQuery, ignoreCase = true) == true ||
                                 u.email?.contains(userSearchQuery, ignoreCase = true) == true
-                            val matchesRole = userRoleFilter == "All" || u.role?.equals(userRoleFilter, ignoreCase = true) == true
+                            val matchesRole = userRoleFilter == "All" || userRoleFilter.lowercase() in u.roleSet()
                             matchesSearch && matchesRole
                         }
 
@@ -365,7 +403,10 @@ fun AdminPortal(
                                     Column(modifier = Modifier.weight(0.6f).padding(horizontal = 8.dp)) {
                                         Text(user.name ?: "Unknown Name", style = MaterialTheme.typography.bodyLarge)
                                         Text(user.email ?: "No email", style = MaterialTheme.typography.bodyMedium)
-                                        Text(user.role ?: "No role", style = MaterialTheme.typography.labelMedium)
+                                        Text(
+                                            user.roleSet().roleLabel().ifBlank { "No role" },
+                                            style = MaterialTheme.typography.labelMedium,
+                                        )
                                     }
 
                                     Box(modifier = Modifier.weight(0.1f)) {
@@ -377,36 +418,11 @@ fun AdminPortal(
                                             onDismissRequest = { expanded = false }
                                         ) {
                                             DropdownMenuItem(
-                                                text = { Text("Make Customer") },
+                                                text = { Text("Edit roles") },
                                                 onClick = {
                                                     expanded = false
-                                                    scope.launch {
-                                                        sdk.patchUserRole(uid, "customer")
-                                                            .onSuccess { reload() }
-                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
-                                                    }
-                                                }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Make Technician") },
-                                                onClick = {
-                                                    expanded = false
-                                                    scope.launch {
-                                                        sdk.patchUserRole(uid, "technician")
-                                                            .onSuccess { reload() }
-                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
-                                                    }
-                                                }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Make Admin") },
-                                                onClick = {
-                                                    expanded = false
-                                                    scope.launch {
-                                                        sdk.patchUserRole(uid, "admin")
-                                                            .onSuccess { reload() }
-                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
-                                                    }
+                                                    draftRoles = user.roleSet()
+                                                    roleEditor = user
                                                 }
                                             )
                                             DropdownMenuItem(
@@ -427,8 +443,25 @@ fun AdminPortal(
                         }
                     }
                     "Orders" -> {
-                        Text("Jobs", style = MaterialTheme.typography.titleLarge)
+                        val openJob = jobs.firstOrNull { it.mongoId() == openOrderId }
+                        if (openJob != null) {
+                            AdminOrderDetail(
+                                sdk = sdk,
+                                job = openJob,
+                                technicians = users.filter { "technician" in it.roleSet() },
+                                snack = snack,
+                                onAuthFailure = onAuthFailure,
+                                onBack = { openOrderId = null },
+                                onChanged = { reload() },
+                            )
+                        } else {
+                        Text("Orders", style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Open an order to send a quote, assign a technician, and move it through the workflow.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
 
                         OutlinedTextField(
                             value = orderSearchQuery,
@@ -445,7 +478,20 @@ fun AdminPortal(
                                 Text("Filter Status: ${orderStatusFilter.replaceFirstChar { it.uppercase() }}")
                             }
                             DropdownMenu(expanded = statusFilterExpanded, onDismissRequest = { statusFilterExpanded = false }) {
-                                listOf("All", "rfq", "quote_sent", "assigned", "signed_off", "completed", "cancelled").forEach { s ->
+                                listOf(
+                                    "All",
+                                    "rfq",
+                                    "quote_sent",
+                                    "order_confirmed",
+                                    "assigned",
+                                    "on_route",
+                                    "in_progress",
+                                    "signed_off",
+                                    "completed",
+                                    "billed",
+                                    "closed",
+                                    "cancelled",
+                                ).forEach { s ->
                                     DropdownMenuItem(
                                         text = { Text(s.replaceFirstChar { it.uppercase() }) },
                                         onClick = {
@@ -470,117 +516,28 @@ fun AdminPortal(
 
                         filteredOrders.forEach { job ->
                             val jId = job.mongoId()
-                            
-                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            val service = job.refText("serviceId", "title").ifBlank { job.optText("pestDescription") }
+                            val techName = job.refText("technicianId", "name").ifBlank { "Unassigned" }
+                            Card(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable(enabled = jId.isNotBlank()) { openOrderId = jId },
+                            ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        text = "${job.optText("contactName")} - ${job.optText("address")}", 
-                                        style = MaterialTheme.typography.titleMedium
+                                        text = "${job.optText("contactName")} · ${job.optText("address")}",
+                                        style = MaterialTheme.typography.titleMedium,
                                     )
-                                    
+                                    Text(service, style = MaterialTheme.typography.bodyMedium)
                                     Text(
-                                        text = "Service: ${job.optText("pestDescription")}", 
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    var statusExpanded by remember { mutableStateOf(false) }
-                                    Box {
-                                        Text(
-                                            text = "Status: ${job.optText("status").ifBlank { "unknown" }}", 
-                                            modifier = Modifier.clickable { statusExpanded = true }, 
-                                            color = MaterialTheme.colorScheme.primary,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        DropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
-                                            listOf("rfq", "quote_sent", "assigned", "signed_off", "completed", "cancelled").forEach { s ->
-                                                DropdownMenuItem(text = { Text(s) }, onClick = { 
-                                                    statusExpanded = false
-                                                    scope.launch {
-                                                        sdk.patchAdminJob(jId, AdminJobPatchBody(status = s))
-                                                            .onSuccess { reload() }
-                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
-                                                    }
-                                                })
-                                            }
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    var techExpanded by remember { mutableStateOf(false) }
-                                    val currentTechId = job.nested("technician")?.optText("_id") ?: job.optText("technicianId")
-                                    val currentTechName = users.find { it.id == currentTechId || it.auth0Id == currentTechId }?.name ?: "Unassigned"
-                                    
-                                    Box {
-                                        Text(
-                                            text = "Assigned: $currentTechName", 
-                                            modifier = Modifier.clickable { techExpanded = true }, 
-                                            color = MaterialTheme.colorScheme.primary,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        DropdownMenu(expanded = techExpanded, onDismissRequest = { techExpanded = false }) {
-                                            DropdownMenuItem(text = { Text("Unassigned") }, onClick = {
-                                                techExpanded = false
-                                                scope.launch { 
-                                                    sdk.patchAdminJob(jId, AdminJobPatchBody(technicianId = null))
-                                                        .onSuccess { reload() }
-                                                }
-                                            })
-                                            users.filter { it.role == "technician" }.forEach { tech ->
-                                                DropdownMenuItem(text = { Text(tech.name ?: tech.email ?: "Unknown") }, onClick = {
-                                                    techExpanded = false
-                                                    scope.launch { 
-                                                        val uid = tech.id ?: tech.auth0Id
-                                                        sdk.patchAdminJob(jId, AdminJobPatchBody(technicianId = uid))
-                                                            .onSuccess { reload() }
-                                                    }
-                                                })
-                                            }
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    var showPriceDialog by remember { mutableStateOf(false) }
-                                    var tempPrice by remember { mutableStateOf(job.optText("quotedPrice")) }
-                                    Text(
-                                        text = "Price: $${job.optText("quotedPrice").ifBlank { "0.00" }}",
-                                        modifier = Modifier.clickable { 
-                                            tempPrice = job.optText("quotedPrice")
-                                            showPriceDialog = true 
-                                        }, 
+                                        "${job.optText("status").replace('_', ' ')} · $techName · $${job.optText("quotedPrice").ifBlank { "0" }}",
                                         color = MaterialTheme.colorScheme.primary,
-                                        style = MaterialTheme.typography.bodyMedium
                                     )
-                                    
-                                    if (showPriceDialog) {
-                                        AlertDialog(
-                                            onDismissRequest = { showPriceDialog = false },
-                                            title = { Text("Set Price") },
-                                            text = {
-                                                OutlinedTextField(
-                                                    value = tempPrice, 
-                                                    onValueChange = { tempPrice = it }, 
-                                                    label = { Text("Price (e.g. 150.00)") },
-                                                    singleLine = true
-                                                )
-                                            },
-                                            confirmButton = {
-                                                Button(onClick = {
-                                                    showPriceDialog = false
-                                                    scope.launch {
-                                                        sdk.patchAdminJob(jId, AdminJobPatchBody(quotedPrice = tempPrice.toDoubleOrNull()))
-                                                            .onSuccess { reload() }
-                                                            .onFailure { err -> handleSdkFailure(err, snack, onAuthFailure, "Failed") }
-                                                    }
-                                                }) { Text("Save") }
-                                            },
-                                            dismissButton = {
-                                                TextButton(onClick = { showPriceDialog = false }) { Text("Cancel") }
-                                            }
-                                        )
-                                    }
                                 }
                             }
+                        }
                         }
                     }
                     "Settings" -> {
@@ -661,12 +618,6 @@ fun AdminPortal(
                                     }
                                 }
                             }
-                        }
-                        
-                        if (integrationPretty.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("Raw Integration JSON", style = MaterialTheme.typography.titleSmall)
-                            Text(integrationPretty, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

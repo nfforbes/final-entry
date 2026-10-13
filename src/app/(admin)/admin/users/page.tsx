@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { MoreVert as MoreIcon, Person as PersonIcon, Security as AdminIcon, Engineering as TechIcon, Add as AddIcon, Email as EmailIcon } from '@mui/icons-material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { Box, Typography, Paper, Chip, IconButton, Menu, MenuItem, Button, Divider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Select, FormControl, InputLabel, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, Chip, IconButton, Menu, MenuItem, Button, Divider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Select, FormControl, InputLabel, Alert, CircularProgress, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import axios from 'axios';
+import { APP_ROLES, rolesOf, type AppRole } from '@/lib/roles';
 
 const tokens = {
   obsidian: '#0b0b0f',
@@ -24,6 +25,9 @@ export default function AdminUsersPage() {
   const [inviteRole, setInviteRole] = useState('customer');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [rolesOpen, setRolesOpen] = useState(false);
+  const [draftRoles, setDraftRoles] = useState<AppRole[]>([]);
+  const [rolesSaving, setRolesSaving] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -70,15 +74,25 @@ export default function AdminUsersPage() {
     }
   };
 
-  const updateUserRole = async (role: string) => {
+  const openRoles = () => {
     if (!selectedUser) return;
+    setDraftRoles(rolesOf(selectedUser));
+    setRolesOpen(true);
+    setAnchorEl(null);
+  };
+
+  const saveRoles = async () => {
+    if (!selectedUser || draftRoles.length === 0) return;
     try {
-      await axios.patch(`/api/admin/users/${selectedUser._id}`, { role });
+      setRolesSaving(true);
+      await axios.patch(`/api/admin/users/${selectedUser._id}`, { roles: draftRoles });
+      setRolesOpen(false);
+      setSelectedUser(null);
       fetchUsers();
     } catch (err) {
-      alert('Failed to update role');
+      alert('Failed to update roles');
     } finally {
-      handleActionClose();
+      setRolesSaving(false);
     }
   };
 
@@ -115,25 +129,31 @@ export default function AdminUsersPage() {
     },
     { 
       field: 'role', 
-      headerName: 'Role', 
-      width: 150,
+      headerName: 'Roles', 
+      width: 280,
       renderCell: (params) => {
-        const isAdm = params.value === 'admin';
-        const isTech = params.value === 'technician';
+        const roles = rolesOf(params.row);
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Chip 
-              label={params.value?.toUpperCase()} 
-              size="small"
-              icon={isAdm ? <AdminIcon /> : isTech ? <TechIcon /> : undefined}
-              sx={{ 
-                bgcolor: isAdm ? 'rgba(198, 241, 53, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                color: isAdm ? tokens.citrus : tokens.chalk,
-                border: `1px solid ${isAdm ? tokens.citrus : tokens.border}`,
-                fontWeight: 600,
-                '& .MuiChip-icon': { color: 'inherit' }
-              }} 
-            />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, height: '100%', flexWrap: 'wrap' }}>
+            {roles.map((role) => {
+              const isAdm = role === 'admin';
+              const isTech = role === 'technician';
+              return (
+                <Chip
+                  key={role}
+                  label={role.toUpperCase()}
+                  size="small"
+                  icon={isAdm ? <AdminIcon /> : isTech ? <TechIcon /> : undefined}
+                  sx={{
+                    bgcolor: isAdm ? 'rgba(198, 241, 53, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    color: isAdm ? tokens.citrus : tokens.chalk,
+                    border: `1px solid ${isAdm ? tokens.citrus : tokens.border}`,
+                    fontWeight: 600,
+                    '& .MuiChip-icon': { color: 'inherit' }
+                  }}
+                />
+              );
+            })}
           </Box>
         );
       }
@@ -240,6 +260,52 @@ export default function AdminUsersPage() {
         />
       </Paper>
 
+      <Dialog
+        open={rolesOpen}
+        onClose={() => !rolesSaving && setRolesOpen(false)}
+        slotProps={{
+          paper: {
+            sx: {
+              bgcolor: tokens.surface,
+              color: tokens.chalk,
+              border: `1px solid ${tokens.border}`,
+              backgroundImage: 'none',
+              borderRadius: '16px',
+            }
+          }
+        }}
+      >
+        <DialogTitle>Roles for {selectedUser?.name}</DialogTitle>
+        <DialogContent>
+          <FormGroup>
+            {APP_ROLES.map((role) => (
+              <FormControlLabel
+                key={role}
+                control={
+                  <Checkbox
+                    checked={draftRoles.includes(role)}
+                    onChange={(event) => {
+                      setDraftRoles((current) => {
+                        const next = event.target.checked
+                          ? [...current, role]
+                          : current.filter((item) => item !== role);
+                        return APP_ROLES.filter((item) => next.includes(item));
+                      });
+                    }}
+                    sx={{ color: tokens.chalk, '&.Mui-checked': { color: tokens.citrus } }}
+                  />
+                }
+                label={role}
+              />
+            ))}
+          </FormGroup>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRolesOpen(false)} disabled={rolesSaving} sx={{ color: tokens.chalk }}>Cancel</Button>
+          <Button onClick={saveRoles} disabled={rolesSaving || draftRoles.length === 0} sx={{ color: tokens.citrus }}>Save</Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Action Menu */}
       <Menu
         anchorEl={anchorEl}
@@ -257,9 +323,7 @@ export default function AdminUsersPage() {
           }
         }}
       >
-        <MenuItem onClick={() => updateUserRole('customer')}>Set as Customer</MenuItem>
-        <MenuItem onClick={() => updateUserRole('technician')}>Set as Technician</MenuItem>
-        <MenuItem onClick={() => updateUserRole('admin')} sx={{ color: tokens.citrus }}>Promote to Admin</MenuItem>
+        <MenuItem onClick={openRoles}>Edit roles</MenuItem>
         <Divider sx={{ borderColor: tokens.border }} />
         <MenuItem onClick={deleteUser} sx={{ color: '#e63946' }}>Delete User</MenuItem>
       </Menu>
